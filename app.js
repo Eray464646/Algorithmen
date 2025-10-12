@@ -10,6 +10,8 @@ let currentMode = 'main';
 let selectedTopic = 'all';
 let userAnswers = [];
 let questionProgress = {};
+let currentProfile = null;
+let profiles = {};
 
 // ===== INITIALISIERUNG =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,10 +20,180 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeApp() {
     loadQuestions();
-    loadProgress();
+    loadProfiles();
+    checkCurrentProfile();
     setupEventListeners();
     applyTheme();
+}
+
+// ===== PROFIL-VERWALTUNG =====
+function loadProfiles() {
+    const savedProfiles = localStorage.getItem('profiles');
+    if (savedProfiles) {
+        profiles = JSON.parse(savedProfiles);
+    } else {
+        // Standard-Admin-Profil erstellen
+        profiles = {
+            'Admin': {
+                password: '4646',
+                questionProgress: {},
+                createdAt: new Date().toISOString(),
+                isAdmin: true
+            }
+        };
+        saveProfiles();
+    }
+}
+
+function saveProfiles() {
+    localStorage.setItem('profiles', JSON.stringify(profiles));
+}
+
+function checkCurrentProfile() {
+    const savedCurrentProfile = localStorage.getItem('currentProfile');
+    
+    if (savedCurrentProfile && profiles[savedCurrentProfile]) {
+        currentProfile = savedCurrentProfile;
+        questionProgress = profiles[currentProfile].questionProgress || {};
+        showScreen('startScreen');
+        updateProfileDisplay();
+    } else {
+        showProfileSelection();
+    }
+}
+
+function showProfileSelection() {
+    showScreen('profileScreen');
+    updateProfileList();
+}
+
+function updateProfileList() {
+    const profileList = document.getElementById('profileList');
+    profileList.innerHTML = '';
+    
+    Object.keys(profiles).forEach(profileName => {
+        const profileCard = document.createElement('div');
+        profileCard.className = 'profile-card';
+        
+        const isAdmin = profiles[profileName].isAdmin;
+        const icon = isAdmin ? '👑' : '👤';
+        
+        profileCard.innerHTML = `
+            <div class="profile-icon">${icon}</div>
+            <div class="profile-name">${profileName}</div>
+            <button class="btn btn-primary profile-select-btn" data-profile="${profileName}">
+                Auswählen
+            </button>
+            ${!isAdmin ? `<button class="btn btn-danger profile-delete-btn" data-profile="${profileName}">🗑️</button>` : ''}
+        `;
+        
+        profileList.appendChild(profileCard);
+    });
+    
+    // Event Listeners für Profil-Buttons
+    document.querySelectorAll('.profile-select-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const profileName = e.target.dataset.profile;
+            selectProfile(profileName);
+        });
+    });
+    
+    document.querySelectorAll('.profile-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const profileName = e.target.dataset.profile;
+            deleteProfile(profileName);
+        });
+    });
+}
+
+function selectProfile(profileName) {
+    const profile = profiles[profileName];
+    
+    if (profile.password) {
+        const password = prompt(`Passwort für ${profileName}:`);
+        if (password !== profile.password) {
+            showToast('Falsches Passwort!', 'error');
+            return;
+        }
+    }
+    
+    currentProfile = profileName;
+    questionProgress = profile.questionProgress || {};
+    localStorage.setItem('currentProfile', profileName);
+    
     showScreen('startScreen');
+    updateProfileDisplay();
+    showToast(`Willkommen, ${profileName}!`, 'success');
+}
+
+function createNewProfile() {
+    const name = prompt('Profilname:');
+    if (!name || name.trim() === '') {
+        showToast('Ungültiger Name', 'error');
+        return;
+    }
+    
+    if (profiles[name]) {
+        showToast('Profil existiert bereits', 'error');
+        return;
+    }
+    
+    const usePassword = confirm('Möchtest du ein Passwort setzen?');
+    let password = null;
+    
+    if (usePassword) {
+        password = prompt('Passwort eingeben:');
+        if (!password) {
+            showToast('Profil-Erstellung abgebrochen', 'info');
+            return;
+        }
+    }
+    
+    profiles[name] = {
+        password: password,
+        questionProgress: {},
+        createdAt: new Date().toISOString(),
+        isAdmin: false
+    };
+    
+    saveProfiles();
+    updateProfileList();
+    showToast(`Profil "${name}" erstellt!`, 'success');
+}
+
+function deleteProfile(profileName) {
+    if (confirm(`Profil "${profileName}" wirklich löschen?`)) {
+        delete profiles[profileName];
+        saveProfiles();
+        updateProfileList();
+        showToast('Profil gelöscht', 'info');
+    }
+}
+
+function switchProfile() {
+    if (confirm('Profil wechseln? Dein aktueller Fortschritt wird gespeichert.')) {
+        saveProgress();
+        showProfileSelection();
+    }
+}
+
+function logoutProfile() {
+    if (confirm('Abmelden? Du kannst dich jederzeit wieder anmelden.')) {
+        saveProgress();
+        currentProfile = null;
+        localStorage.removeItem('currentProfile');
+        showProfileSelection();
+        showToast('Erfolgreich abgemeldet', 'info');
+    }
+}
+
+function updateProfileDisplay() {
+    const profileNameElement = document.getElementById('currentProfileName');
+    if (profileNameElement && currentProfile) {
+        const isAdmin = profiles[currentProfile]?.isAdmin;
+        const icon = isAdmin ? '👑' : '👤';
+        profileNameElement.textContent = `${icon} ${currentProfile}`;
+    }
 }
 
 // ===== FRAGEN LADEN UND VERARBEITEN =====
@@ -29,10 +201,8 @@ function loadQuestions() {
     // Fragen aus algorithmen.js verarbeiten
     const processedAlgoQuestions = algorithmenQuestions.map((q, index) => {
         if (q.write) {
-            // Offene Fragen in Multiple Choice umwandeln
             return convertOpenToMC(q, index);
         } else {
-            // Multiple Choice Fragen normalisieren
             return {
                 id: q.id || `algo_${index}`,
                 question: q.question,
@@ -64,15 +234,10 @@ function loadQuestions() {
     showToast(`${allQuestions.length} Fragen erfolgreich geladen`, 'success');
 }
 
-// ===== OFFENE FRAGEN IN MULTIPLE CHOICE UMWANDELN =====
 function convertOpenToMC(question, index) {
     const id = question.id || `open_${index}`;
     const solutionText = extractTextFromHTML(question.solution);
-    
-    // Generiere plausible Antwortoptionen basierend auf der Lösung
     const options = generateOptionsFromSolution(solutionText, question.question);
-    
-    // Die erste Option ist immer die korrekte (basierend auf der Lösung)
     const correctIndices = [0];
     
     return {
@@ -94,25 +259,18 @@ function extractTextFromHTML(html) {
 }
 
 function generateOptionsFromSolution(solution, question) {
-    // Intelligente Generierung von Antworten basierend auf der Lösung
     const options = [];
-    
-    // Erste Option: Korrekte Antwort (vereinfachte Version der Lösung)
     options.push(simplifyCorrectAnswer(solution));
-    
-    // Falsche Optionen generieren
     options.push(...generateWrongOptions(solution, question));
     
-    // Mische alle Optionen außer der ersten
     const correctOption = options[0];
     const wrongOptions = options.slice(1);
     shuffleArray(wrongOptions);
     
-    return [correctOption, ...wrongOptions.slice(0, 3)]; // Maximal 4 Optionen
+    return [correctOption, ...wrongOptions.slice(0, 3)];
 }
 
 function simplifyCorrectAnswer(solution) {
-    // Extrahiere die Kernaussage aus der Lösung
     const sentences = solution.split(/[.!?]+/).filter(s => s.trim().length > 20);
     if (sentences.length > 0) {
         return sentences[0].trim() + '.';
@@ -123,7 +281,6 @@ function simplifyCorrectAnswer(solution) {
 function generateWrongOptions(solution, question) {
     const wrongOptions = [];
     
-    // Muster für falsche Antworten
     const patterns = [
         "Dies ist nicht korrekt, da es dem Grundprinzip widerspricht.",
         "Diese Aussage trifft nicht zu, da wichtige Aspekte fehlen.",
@@ -131,7 +288,6 @@ function generateWrongOptions(solution, question) {
         "Diese Antwort ist unvollständig und berücksichtigt nicht alle Faktoren."
     ];
     
-    // Füge spezifische falsche Antworten basierend auf dem Thema hinzu
     if (question.toLowerCase().includes('laufzeit') || question.toLowerCase().includes('komplexität')) {
         wrongOptions.push("Die Laufzeit ist immer konstant O(1).");
         wrongOptions.push("Die Komplexität spielt keine Rolle bei kleinen Datenmengen.");
@@ -143,9 +299,7 @@ function generateWrongOptions(solution, question) {
         wrongOptions.push("Graphen und Bäume sind identisch in ihrer Funktionsweise.");
     }
     
-    // Fülle mit generischen Mustern auf
     wrongOptions.push(...patterns);
-    
     return wrongOptions;
 }
 
@@ -205,6 +359,11 @@ function setupEventListeners() {
             setTheme('light');
         }
     });
+
+    // Profil-Management
+    document.getElementById('createProfileBtn').addEventListener('click', createNewProfile);
+    document.getElementById('switchProfileBtn').addEventListener('click', switchProfile);
+    document.getElementById('logoutProfileBtn').addEventListener('click', logoutProfile);
 }
 
 // ===== NAVIGATION =====
@@ -243,19 +402,16 @@ function startQuiz(mode) {
     currentQuestionIndex = 0;
     userAnswers = [];
 
-    // Fragen filtern nach Topic
     let filteredQuestions = selectedTopic === 'all' 
         ? [...allQuestions]
         : allQuestions.filter(q => q.topic === selectedTopic);
 
     if (mode === 'learn') {
-        // Nur unsichere und unbekannte Fragen
         filteredQuestions = filteredQuestions.filter(q => {
             const status = getQuestionStatus(q.id);
             return status !== 'confident';
         });
 
-        // Priorisierung: "cannot" > "unsure"
         filteredQuestions.sort((a, b) => {
             const statusA = getQuestionStatus(a.id);
             const statusB = getQuestionStatus(b.id);
@@ -269,9 +425,7 @@ function startQuiz(mode) {
         return;
     }
 
-    // Mische Fragen
     currentQuestions = shuffleArray(filteredQuestions);
-    
     showScreen('quizScreen');
     displayQuestion();
 }
@@ -280,24 +434,20 @@ function startQuiz(mode) {
 function displayQuestion() {
     const question = currentQuestions[currentQuestionIndex];
     
-    // Update Progress
     document.getElementById('questionCounter').textContent = 
         `Frage ${currentQuestionIndex + 1} von ${currentQuestions.length}`;
     document.getElementById('topicBadge').textContent = question.topic;
     document.getElementById('progressFill').style.width = 
         `${((currentQuestionIndex + 1) / currentQuestions.length) * 100}%`;
 
-    // Frage anzeigen
     document.getElementById('questionText').textContent = question.question;
 
-    // Anzahl korrekter Antworten anzeigen
     const correctCount = question.correctIndices.length;
     const correctInfo = correctCount === 1 
         ? 'Diese Frage hat 1 richtige Antwort'
         : `Diese Frage hat ${correctCount} richtige Antworten`;
     document.getElementById('correctAnswersInfo').textContent = correctInfo;
 
-    // Antwortoptionen anzeigen
     const answersContainer = document.getElementById('answersContainer');
     answersContainer.innerHTML = '';
 
@@ -310,10 +460,7 @@ function displayQuestion() {
         answersContainer.appendChild(btn);
     });
 
-    // Feedback ausblenden
     document.getElementById('feedbackContainer').classList.add('hidden');
-
-    // Button States
     document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
     document.getElementById('nextBtn').disabled = true;
 }
@@ -323,36 +470,26 @@ function selectAnswer(selectedIndex) {
     const question = currentQuestions[currentQuestionIndex];
     const answerButtons = document.querySelectorAll('.answer-btn');
     
-    // Nur erlauben, wenn noch nicht beantwortet
     if (userAnswers[currentQuestionIndex]) return;
 
     const isCorrect = question.correctIndices.includes(selectedIndex);
     
-    // Visuelles Feedback
     answerButtons[selectedIndex].classList.add(isCorrect ? 'correct' : 'wrong');
     
-    // Zeige alle korrekten Antworten
     question.correctIndices.forEach(idx => {
         answerButtons[idx].classList.add('correct');
     });
 
-    // Deaktiviere alle Buttons
     answerButtons.forEach(btn => btn.disabled = true);
 
-    // Speichere Antwort
     userAnswers[currentQuestionIndex] = {
         selectedIndex,
         isCorrect,
         questionId: question.id
     };
 
-    // Update Question Progress
     updateQuestionProgress(question.id, isCorrect);
-
-    // Zeige Feedback
     showFeedback(isCorrect, question.feedback);
-
-    // Enable Next Button
     document.getElementById('nextBtn').disabled = false;
 }
 
@@ -391,12 +528,10 @@ function showResults() {
     const wrongCount = userAnswers.filter(a => a && !a.isCorrect).length;
     const percentage = Math.round((correctCount / currentQuestions.length) * 100);
 
-    // Update Result Display
     document.getElementById('correctCount').textContent = correctCount;
     document.getElementById('wrongCount').textContent = wrongCount;
     document.getElementById('percentageCount').textContent = `${percentage}%`;
 
-    // Result Icon
     const resultIcon = document.getElementById('resultIcon');
     if (percentage >= 90) {
         resultIcon.textContent = '🏆';
@@ -408,7 +543,6 @@ function showResults() {
         resultIcon.textContent = '📚';
     }
 
-    // Wrong Questions
     const wrongQuestions = currentQuestions.filter((q, idx) => 
         userAnswers[idx] && !userAnswers[idx].isCorrect
     );
@@ -447,21 +581,22 @@ function updateQuestionProgress(questionId, isCorrect) {
     }
 
     questionProgress[questionId].lastAnswered = new Date().toISOString();
+    saveProgress();
 }
 
 function getQuestionStatus(questionId) {
     const progress = questionProgress[questionId];
     
     if (!progress || progress.correct === 0) {
-        return 'cannot'; // Noch nie richtig
+        return 'cannot';
     }
     
     if (progress.wrong > 0 && progress.correct < 2) {
-        return 'unsure'; // Mal richtig, mal falsch
+        return 'unsure';
     }
     
     if (progress.correct >= 2 && progress.wrong === 0) {
-        return 'confident'; // Mindestens 2x richtig, nie falsch
+        return 'confident';
     }
     
     return 'unsure';
@@ -482,15 +617,17 @@ function addWrongQuestionsToLearnMode() {
     showToast(`${wrongQuestions.length} Fragen zum Lernmodus hinzugefügt`, 'success');
 }
 
-// ===== LOKALERSPEICHERUNG =====
+// ===== LOKALSPEICHERUNG =====
 function saveProgress() {
-    localStorage.setItem('questionProgress', JSON.stringify(questionProgress));
+    if (currentProfile && profiles[currentProfile]) {
+        profiles[currentProfile].questionProgress = questionProgress;
+        saveProfiles();
+    }
 }
 
 function loadProgress() {
-    const saved = localStorage.getItem('questionProgress');
-    if (saved) {
-        questionProgress = JSON.parse(saved);
+    if (currentProfile && profiles[currentProfile]) {
+        questionProgress = profiles[currentProfile].questionProgress || {};
     }
 }
 
@@ -498,6 +635,7 @@ function exportProgress() {
     const data = {
         version: '1.0.0',
         exported: new Date().toISOString(),
+        profile: currentProfile,
         progress: questionProgress
     };
 
@@ -505,7 +643,7 @@ function exportProgress() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `lernfortschritt_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `lernfortschritt_${currentProfile}_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
 
@@ -553,7 +691,6 @@ function updateStatsScreen() {
     document.getElementById('totalWrong').textContent = totalWrong;
     document.getElementById('overallPercentage').textContent = `${percentage}%`;
 
-    // Learning Status Bars
     const statusCounts = { cannot: 0, unsure: 0, confident: 0 };
     allQuestions.forEach(q => {
         statusCounts[getQuestionStatus(q.id)]++;
@@ -566,7 +703,6 @@ function updateStatsScreen() {
         ${createStatusBar('Sicher', statusCounts.confident, allQuestions.length, 'confident')}
     `;
 
-    // Topic Stats
     const topicStats = {};
     allQuestions.forEach(q => {
         if (!topicStats[q.topic]) {
@@ -666,5 +802,7 @@ window.debugApp = {
     allQuestions,
     questionProgress,
     currentQuestions,
-    getQuestionStatus
+    getQuestionStatus,
+    profiles,
+    currentProfile
 };
