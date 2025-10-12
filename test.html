@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #01C6B1;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #019B8F;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🔥 Firebase Verbindungstest</h1>
+        
+        <div id="status" class="status info">
+            Warte auf Test...
+        </div>
+        
+        <button onclick="testFirebase()">🧪 Firebase Verbindung testen</button>
+        <button onclick="showConsole()">📋 Konsole öffnen (F12)</button>
+        
+        <h2>Anleitung:</h2>
+        <ol>
+            <li>Klicke auf "Firebase Verbindung testen"</li>
+            <li>Öffne Firebase Console → Firestore Database → Daten</li>
+            <li>Du solltest eine Collection "test" mit einem Dokument "connection" sehen</li>
+            <li>Wenn ja: ✅ Firebase funktioniert!</li>
+        </ol>
+        
+        <h2>Konsolen-Output:</h2>
+        <div id="console-output" style="background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 5px; font-family: monospace; min-height: 100px;">
+            Öffne die Browser-Konsole (F12) für Details...
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, doc, setDoc, getDoc } from './firebase-config.js';
+        
+        const statusDiv = document.getElementById('status');
+        const consoleDiv = document.getElementById('console-output');
+        
+        function log(message, type = 'info') {
+            console.log(message);
+            consoleDiv.innerHTML += message + '\n';
+        }
+        
+        window.testFirebase = async function() {
+            statusDiv.className = 'status info';
+            statusDiv.textContent = '⏳ Teste Verbindung...';
+            consoleDiv.innerHTML = '';
+            
+            try {
+                log('📝 Schreibe Test-Daten nach Firebase...');
+                
+                await setDoc(doc(db, 'test', 'connection'), {
+                    message: 'Firebase funktioniert!',
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    testNumber: Math.random()
+                });
+                
+                log('✅ Daten erfolgreich geschrieben!');
+                log('📥 Lese Daten zurück...');
+                
+                const docSnap = await getDoc(doc(db, 'test', 'connection'));
+                
+                if (docSnap.exists()) {
+                    log('✅ Daten erfolgreich gelesen!');
+                    log('📄 Inhalt: ' + JSON.stringify(docSnap.data(), null, 2));
+                    
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `
+                        ✅ <strong>Firebase funktioniert perfekt!</strong><br>
+                        Gehe zu Firebase Console → Firestore Database → Daten<br>
+                        Du solltest eine Collection "test" sehen!
+                    `;
+                } else {
+                    throw new Error('Dokument wurde nicht gefunden!');
+                }
+                
+            } catch (error) {
+                log('❌ FEHLER: ' + error.message);
+                log('Stack: ' + error.stack);
+                
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `
+                    ❌ <strong>Fehler:</strong> ${error.message}<br>
+                    Prüfe die Firestore Rules in Firebase Console!
+                `;
+            }
+        };
+        
+        window.showConsole = function() {
+            alert('Drücke F12 um die Browser-Konsole zu öffnen');
+        };
+        
+        // Automatischer Test beim Laden
+        log('🚀 Seite geladen, Firebase wird initialisiert...');
+        setTimeout(() => {
+            log('⏱️ Starte automatischen Test in 2 Sekunden...');
+            setTimeout(() => window.testFirebase(), 2000);
+        }, 1000);
+    </script>
+</body>
+</html>
