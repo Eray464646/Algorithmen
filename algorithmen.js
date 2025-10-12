@@ -1,6 +1,6 @@
 // algorithmen.js - Fragen zum Thema Algorithmen
 
-const algorithmenQuestions=  [
+const algorithmenQuestions = [
 
 // ==================== INSERTION SORT (ERSATZ FÜR SELECTION SORT) ====================
 
@@ -125,7 +125,7 @@ const algorithmenQuestions=  [
             { text: "Mit Dijkstra", correct: false }
         ],
         topic: "Algorithmen",
-        feedback: "Zwei gängige Verfahren: DFS nach absteigender Abschlusszeit oder Kahn’s Algorithmus (BFS-basiert via In-Degrees)."
+        feedback: "Zwei gängige Verfahren: DFS nach absteigender Abschlusszeit oder Kahn's Algorithmus (BFS-basiert via In-Degrees)."
     },
 
 // ==================== PRIM ALGORITHMUS ====================
@@ -637,8 +637,5 @@ const algorithmenQuestions=  [
 
 ];
 
-
-// Export für die Verwendung in anderen Dateien
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = algorithmenQuestions;
-}
+// Export als ES6-Modul
+export default algorithmenQuestions;
