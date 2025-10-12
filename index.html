@@ -13,6 +13,7 @@
             <div class="container">
                 <h1 class="logo">📚 A&D Lernplattform</h1>
                 <div class="header-controls">
+                    <div class="profile-info" id="currentProfileName"></div>
                     <button class="theme-toggle" id="themeToggle" aria-label="Theme umschalten">
                         <span class="theme-icon">🌙</span>
                     </button>
@@ -46,8 +47,22 @@
         <main class="main-content">
             <div class="container">
                 
+                <!-- Profil-Auswahl-Bildschirm -->
+                <div id="profileScreen" class="screen">
+                    <div class="profile-selection-card">
+                        <h2>👤 Profilauswahl</h2>
+                        <p>Wähle dein Profil oder erstelle ein neues</p>
+                        
+                        <div id="profileList" class="profile-list"></div>
+                        
+                        <button class="btn btn-primary" id="createProfileBtn" style="margin-top: 2rem;">
+                            ➕ Neues Profil erstellen
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Start-Bildschirm -->
-                <div id="startScreen" class="screen active">
+                <div id="startScreen" class="screen">
                     <div class="welcome-card">
                         <h2>Willkommen zur Klausurvorbereitung! 🎓</h2>
                         <p>Wähle einen Modus und bereite dich optimal auf deine Prüfung vor.</p>
@@ -198,6 +213,16 @@
                         <h2>⚙️ Einstellungen</h2>
                         
                         <div class="settings-section">
+                            <h3>Profil-Verwaltung</h3>
+                            <button class="btn btn-outline" id="switchProfileBtn">
+                                🔄 Profil wechseln
+                            </button>
+                            <button class="btn btn-outline" id="logoutProfileBtn">
+                                🚪 Abmelden
+                            </button>
+                        </div>
+
+                        <div class="settings-section">
                             <h3>Lernfortschritt</h3>
                             <button class="btn btn-outline" id="exportProgressBtn">
                                 📥 Fortschritt exportieren
@@ -221,8 +246,9 @@
 
                         <div class="settings-section">
                             <h3>Über die App</h3>
-                            <p>Version 1.0.0</p>
+                            <p>Version 2.0.0</p>
                             <p>Algorithmen & Datenstrukturen Lernplattform</p>
+                            <p>Mit Multi-User Support 👥</p>
                             <p>Entwickelt für optimale Klausurvorbereitung 🎓</p>
                         </div>
                     </div>
