@@ -1,8 +1,6 @@
-/* Multiple-Choice-Fragen (jeweils genau 1 richtige Antwort)
-   Thema: Bäume, Suchen, Spanning-Tree-Heuristik
-*/
+// Multiple-Choice-Fragen zum Thema: Bäume, Suchen, Spanning-Tree-Heuristik
 
-const questions = [
+const mcFragen = [
   {
     id: 1,
     question: "Warum ist ein Baum mit 3 Knoten und 5 Kanten nicht kreisfrei?",
@@ -101,12 +99,5 @@ const questions = [
   }
 ];
 
-// Export für ES-Module und CommonJS
-export default questions;
-
-try {
-  // optionaler CommonJS-Fallback
-  module.exports = questions;
-} catch (_) {
-  /* noop in Browser/ESM */
-}
+// Export als ES6-Modul
+export default mcFragen;
