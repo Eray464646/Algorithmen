@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A&D Lernplattform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header mit Navigation -->
+        <header class="header">
+            <div class="container">
+                <h1 class="logo">📚 A&D Lernplattform</h1>
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Theme umschalten">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Haupt-Navigation -->
+        <nav class="main-nav">
+            <div class="container">
+                <button class="nav-btn active" data-mode="main">
+                    <span class="nav-icon">📝</span>
+                    Hauptmodus
+                </button>
+                <button class="nav-btn" data-mode="learn">
+                    <span class="nav-icon">🎯</span>
+                    Lernmodus
+                </button>
+                <button class="nav-btn" data-mode="stats">
+                    <span class="nav-icon">📊</span>
+                    Statistik
+                </button>
+                <button class="nav-btn" data-mode="settings">
+                    <span class="nav-icon">⚙️</span>
+                    Einstellungen
+                </button>
+            </div>
+        </nav>
+
+        <!-- Hauptinhalt -->
+        <main class="main-content">
+            <div class="container">
+                
+                <!-- Start-Bildschirm -->
+                <div id="startScreen" class="screen active">
+                    <div class="welcome-card">
+                        <h2>Willkommen zur Klausurvorbereitung! 🎓</h2>
+                        <p>Wähle einen Modus und bereite dich optimal auf deine Prüfung vor.</p>
+                        
+                        <div class="topic-filter">
+                            <h3>Themenauswahl:</h3>
+                            <div class="topic-buttons" id="topicFilter">
+                                <button class="topic-btn active" data-topic="all">Alle Themen</button>
+                                <button class="topic-btn" data-topic="Algorithmen">Algorithmen</button>
+                                <button class="topic-btn" data-topic="Suche & Bäume">Suche & Bäume</button>
+                            </div>
+                        </div>
+
+                        <div class="mode-selection">
+                            <div class="mode-card" data-mode="main">
+                                <div class="mode-icon">📝</div>
+                                <h3>Hauptmodus</h3>
+                                <p>Beantworte alle Fragen in zufälliger Reihenfolge</p>
+                                <button class="btn btn-primary start-btn" data-mode="main">Starten</button>
+                            </div>
+                            
+                            <div class="mode-card" data-mode="learn">
+                                <div class="mode-icon">🎯</div>
+                                <h3>Lernmodus</h3>
+                                <p>Intelligente Wiederholung schwieriger Fragen</p>
+                                <button class="btn btn-secondary start-btn" data-mode="learn">Starten</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz-Bildschirm -->
+                <div id="quizScreen" class="screen">
+                    <div class="quiz-header">
+                        <div class="progress-info">
+                            <span id="questionCounter">Frage 1 von 50</span>
+                            <span id="topicBadge" class="topic-badge"></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+                    <div class="question-card" id="questionCard">
+                        <div class="question-header">
+                            <h2 id="questionText"></h2>
+                            <div id="correctAnswersInfo" class="correct-info"></div>
+                        </div>
+                        
+                        <div id="answersContainer" class="answers-container"></div>
+                        
+                        <div id="feedbackContainer" class="feedback-container hidden">
+                            <div class="feedback-content">
+                                <div class="feedback-icon" id="feedbackIcon"></div>
+                                <div class="feedback-text" id="feedbackText"></div>
+                            </div>
+                        </div>
+
+                        <div class="question-actions">
+                            <button class="btn btn-outline" id="prevBtn" disabled>Zurück</button>
+                            <button class="btn btn-primary" id="nextBtn" disabled>Weiter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ergebnis-Bildschirm -->
+                <div id="resultScreen" class="screen">
+                    <div class="result-card">
+                        <div class="result-icon" id="resultIcon">🎉</div>
+                        <h2 id="resultTitle">Durchlauf beendet!</h2>
+                        
+                        <div class="result-stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="correctCount">0</div>
+                                <div class="stat-label">Richtig</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="wrongCount">0</div>
+                                <div class="stat-label">Falsch</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="percentageCount">0%</div>
+                                <div class="stat-label">Erfolgsquote</div>
+                            </div>
+                        </div>
+
+                        <div id="wrongQuestionsContainer" class="wrong-questions-container hidden">
+                            <h3>Falsch beantwortete Fragen:</h3>
+                            <ul id="wrongQuestionsList"></ul>
+                            <button class="btn btn-secondary" id="addToLearnModeBtn">
+                                In Lernmodus übernehmen
+                            </button>
+                        </div>
+
+                        <div class="result-actions">
+                            <button class="btn btn-outline" id="backToStartBtn">Zurück zum Start</button>
+                            <button class="btn btn-primary" id="restartBtn">Erneut starten</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistik-Bildschirm -->
+                <div id="statsScreen" class="screen">
+                    <div class="stats-card">
+                        <h2>📊 Deine Lernstatistik</h2>
+                        
+                        <div class="stats-overview">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalQuestionsAnswered">0</div>
+                                <div class="stat-desc">Fragen beantwortet</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalCorrect">0</div>
+                                <div class="stat-desc">Richtig</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalWrong">0</div>
+                                <div class="stat-desc">Falsch</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="overallPercentage">0%</div>
+                                <div class="stat-desc">Gesamterfolg</div>
+                            </div>
+                        </div>
+
+                        <div class="learning-status">
+                            <h3>Lernstatus nach Kategorien:</h3>
+                            <div id="learningStatusBars"></div>
+                        </div>
+
+                        <div class="topic-stats">
+                            <h3>Statistik nach Themen:</h3>
+                            <div id="topicStatsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Einstellungen-Bildschirm -->
+                <div id="settingsScreen" class="screen">
+                    <div class="settings-card">
+                        <h2>⚙️ Einstellungen</h2>
+                        
+                        <div class="settings-section">
+                            <h3>Lernfortschritt</h3>
+                            <button class="btn btn-outline" id="exportProgressBtn">
+                                📥 Fortschritt exportieren
+                            </button>
+                            <button class="btn btn-outline" id="importProgressBtn">
+                                📤 Fortschritt importieren
+                            </button>
+                            <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                            <button class="btn btn-danger" id="resetProgressBtn">
+                                🗑️ Fortschritt zurücksetzen
+                            </button>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Darstellung</h3>
+                            <label class="toggle-label">
+                                <input type="checkbox" id="darkModeToggle">
+                                <span>Dark Mode</span>
+                            </label>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Über die App</h3>
+                            <p>Version 1.0.0</p>
+                            <p>Algorithmen & Datenstrukturen Lernplattform</p>
+                            <p>Entwickelt für optimale Klausurvorbereitung 🎓</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Toast Benachrichtigungen -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
