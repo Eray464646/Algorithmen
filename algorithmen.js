@@ -2,7 +2,7 @@
 
 const algorithmenQuestions = [
 
-// ==================== INSERTION SORT (ERSATZ FÜR SELECTION SORT) ====================
+// ==================== INSERTION SORT ====================
 
     {
         question: "Welche Worst-Case Laufzeit hat Insertion Sort?",
@@ -12,7 +12,7 @@ const algorithmenQuestions = [
             { text: "O(n·log n)", correct: false },
             { text: "O(log n)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Insertion Sort",
         feedback: "Insertion Sort hat im Worst Case O(n²), z. B. bei umgekehrter Sortierung. Im Best Case (bereits sortiert) ist die Laufzeit O(n)."
     },
 
@@ -24,7 +24,7 @@ const algorithmenQuestions = [
             { text: "Teile das Array rekursiv in zwei Hälften", correct: false },
             { text: "Füge Elemente nacheinander in die richtige Position im bereits sortierten Präfix ein", correct: true }
         ],
-        topic: "Algorithmen",
+        topic: "Insertion Sort",
         feedback: "Insertion Sort hält links ein sortiertes Präfix und fügt das nächste Element durch Verschieben (Shifts) an die passende Position ein."
     },
 
@@ -36,11 +36,11 @@ const algorithmenQuestions = [
             { text: "Hat konstantes Laufzeitverhalten", correct: false },
             { text: "Ist schneller bei bereits (nahezu) sortierten Listen", correct: true }
         ],
-        topic: "Algorithmen",
+        topic: "Insertion Sort",
         feedback: "Insertion Sort ist stabil und in-situ. Die Laufzeit ist datenabhängig: Best Case O(n), Average/Worst Case O(n²). Auf fast sortierten Daten sehr effizient."
     },
 
-// ==================== BREITENSUCHE (BFS) — ERSATZ FÜR TIEFENSUCHE (DFS) ====================
+// ==================== BREITENSUCHE (BFS) ====================
 
     {
         question: "Was bedeutet BFS?",
@@ -50,7 +50,7 @@ const algorithmenQuestions = [
             { text: "Balanced-First Search", correct: false },
             { text: "Branch-First Search", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Breitensuche",
         feedback: "BFS steht für Breadth-First Search, auf Deutsch Breitensuche."
     },
 
@@ -62,7 +62,7 @@ const algorithmenQuestions = [
             { text: "Array", correct: false },
             { text: "Heap", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Breitensuche",
         feedback: "BFS verwendet eine Queue, um die Knoten Ebene für Ebene abzuarbeiten."
     },
 
@@ -74,7 +74,7 @@ const algorithmenQuestions = [
             { text: "O(n + m)", correct: true },
             { text: "O(n²)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Breitensuche",
         feedback: "BFS hat Laufzeit O(n+m), wobei n die Anzahl der Knoten und m die Anzahl der Kanten ist."
     },
 
@@ -86,7 +86,7 @@ const algorithmenQuestions = [
             { text: "Sie minimiert die Summe der Gewichte", correct: false },
             { text: "Sie erzeugt keine Baumstruktur", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Breitensuche",
         feedback: "BFS liefert kürzeste Pfade in ungewichteten Graphen und erzeugt dabei einen BFS-Baum."
     },
 
@@ -98,7 +98,7 @@ const algorithmenQuestions = [
             { text: "Eine Adjazenzmatrix", correct: false },
             { text: "Ein minimaler Spannbaum", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Breitensuche",
         feedback: "Die von BFS verfolgten Eltern-Kanten bilden einen BFS-Baum (Level-Struktur) ab dem Startknoten."
     },
 
@@ -112,7 +112,7 @@ const algorithmenQuestions = [
             { text: "Für alle Graphen", correct: false },
             { text: "Nur für vollständige Graphen", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Topologische Sortierung",
         feedback: "Topologische Sortierung ist nur in kreisfreien gerichteten Graphen (DAG = Directed Acyclic Graph) möglich."
     },
 
@@ -124,7 +124,7 @@ const algorithmenQuestions = [
             { text: "Mit DFS (Finish-Zeiten) oder mit Kahn's Algorithmus (BFS/In-Degrees)", correct: true },
             { text: "Mit Dijkstra", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Topologische Sortierung",
         feedback: "Zwei gängige Verfahren: DFS nach absteigender Abschlusszeit oder Kahn's Algorithmus (BFS-basiert via In-Degrees)."
     },
 
@@ -138,7 +138,7 @@ const algorithmenQuestions = [
             { text: "Maximalen Fluss", correct: false },
             { text: "Euler-Tour", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "PRIM MST",
         feedback: "Prim berechnet einen minimalen Spannbaum (Minimum Spanning Tree, MST) in einem gewichteten, zusammenhängenden, ungerichteten Graphen."
     },
 
@@ -150,7 +150,7 @@ const algorithmenQuestions = [
             { text: "Priority Queue", correct: true },
             { text: "Linked List", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "PRIM MST",
         feedback: "Prim verwendet eine Priority Queue, um immer die günstigste Kante zum Baum hinzuzufügen."
     },
 
@@ -162,7 +162,7 @@ const algorithmenQuestions = [
             { text: "Finde den kürzesten Weg von einem Startknoten", correct: false },
             { text: "Teile den Graphen rekursiv", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "PRIM MST",
         feedback: "Prim beginnt mit einem beliebigen Knoten und erweitert den Baum schrittweise um die günstigste Kante, die einen Knoten des Baumes mit einem noch nicht aufgenommenen Knoten verbindet."
     },
 
@@ -174,7 +174,7 @@ const algorithmenQuestions = [
             { text: "O(n·m)", correct: false },
             { text: "O(n + m)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "PRIM MST",
         feedback: "Mit binärem Heap: O(m·log n)."
     },
 
@@ -186,7 +186,7 @@ const algorithmenQuestions = [
             { text: "Weil DFS verwendet wird", correct: false },
             { text: "Weil nur ungerichtete Graphen erlaubt sind", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "PRIM MST",
         feedback: "Prim wählt stets die günstigste Kante über dem Schnitt (Baum vs. Rest) und fügt damit genau einen neuen Knoten hinzu – dadurch kann kein Zyklus entstehen."
     },
 
@@ -200,7 +200,7 @@ const algorithmenQuestions = [
             { text: "Maximalen Fluss", correct: true },
             { text: "Euler-Tour", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Netzwerkflüsse",
         feedback: "Ford-Fulkerson berechnet den maximalen Fluss von einer Quelle s zu einer Senke t in einem Flussnetzwerk."
     },
 
@@ -212,7 +212,7 @@ const algorithmenQuestions = [
             { text: "Ein minimaler Spannbaum", correct: false },
             { text: "Ein sortierter Graph", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Netzwerkflüsse",
         feedback: "Der Residualgraph zeigt die Restkapazitäten (Differenz zwischen maximaler Kapazität und aktuellem Fluss) und erlaubt Rückflüsse."
     },
 
@@ -224,7 +224,7 @@ const algorithmenQuestions = [
             { text: "Sortier- und Suchbedingung", correct: false },
             { text: "Richtungs- und Gewichtsbedingung", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Netzwerkflüsse",
         feedback: "Ein zulässiger Fluss muss die Kapazitätsbedingung (0 ≤ f ≤ u) und die Flusserhaltungsbedingung (Einfluss = Ausfluss außer bei Quelle/Senke) erfüllen."
     },
 
@@ -236,7 +236,7 @@ const algorithmenQuestions = [
             { text: "Nur bei ungerichteten Graphen", correct: false },
             { text: "Nur bei balancierten Graphen", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Netzwerkflüsse",
         feedback: "Ford-Fulkerson terminiert garantiert bei rationalen Kapazitäten. Bei irrationalen Werten kann es zu Nicht-Terminierung kommen."
     },
 
@@ -248,7 +248,7 @@ const algorithmenQuestions = [
             { text: "Ein kürzester Weg", correct: false },
             { text: "Ein Weg ohne Rückflüsse", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Netzwerkflüsse",
         feedback: "Ein fluss-augmentierender Weg ist ein Weg von der Quelle zur Senke im Residualgraphen, auf dem der Fluss noch erhöht werden kann."
     },
 
@@ -262,7 +262,7 @@ const algorithmenQuestions = [
             { text: "Logarithmische Laufzeit", correct: false },
             { text: "Konstante Laufzeit", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "O(n²) bedeutet quadratische Laufzeit - bei doppelter Eingabegröße vervierfacht sich die Laufzeit."
     },
 
@@ -274,7 +274,7 @@ const algorithmenQuestions = [
             { text: "Nur der am schnellsten wachsende Term zählt", correct: true },
             { text: "Alle Terme müssen berücksichtigt werden", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Bei der O-Notation werden konstante Faktoren und additive Konstanten ignoriert. Nur der dominante (am schnellsten wachsende) Term bleibt übrig."
     },
 
@@ -294,7 +294,7 @@ const algorithmenQuestions = [
         <li>O(n!) - faktoriell</li>
     </ol>
     `,
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Die Reihenfolge von schnell nach langsam: O(1) < O(log n) < O(n) < O(n·log n) < O(n²) < O(n³) < O(2ⁿ) < O(n!)."
     },
 
@@ -306,7 +306,7 @@ const algorithmenQuestions = [
             { text: "O(n·log n)", correct: true },
             { text: "O(log n)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Merge Sort hat im Best, Average und Worst Case immer O(n·log n) Laufzeit."
     },
 
@@ -318,7 +318,7 @@ const algorithmenQuestions = [
             { text: "O(n²)", correct: false },
             { text: "O(log n)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Quick Sort hat im Average Case O(n·log n), im Worst Case jedoch O(n²)."
     },
 
@@ -332,7 +332,7 @@ const algorithmenQuestions = [
             { text: "Beide sind LIFO", correct: false },
             { text: "Beide sind FIFO", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Datenstrukturen",
         feedback: "Stack folgt dem LIFO-Prinzip (Last In, First Out), Queue dem FIFO-Prinzip (First In, First Out)."
     },
 
@@ -344,7 +344,7 @@ const algorithmenQuestions = [
             { text: "Schnellerer Zugriff", correct: false },
             { text: "Weniger Speicherverbrauch", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Datenstrukturen",
         feedback: "Verkettete Listen haben eine flexible Größe und können dynamisch wachsen/schrumpfen. Arrays haben eine feste Größe."
     },
 
@@ -356,7 +356,7 @@ const algorithmenQuestions = [
             { text: "O(log n)", correct: false },
             { text: "O(n²)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Datenstrukturen",
         feedback: "Arrays bieten direkten Zugriff in O(1) Zeit über die Berechnung: Startadresse + i * Elementgröße."
     },
 
@@ -368,7 +368,7 @@ const algorithmenQuestions = [
             { text: "Ein Baum", correct: false },
             { text: "Ein Hash Table", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Datenstrukturen",
         feedback: "Ein Ringspeicher (Ring Buffer) ist ein Array mit fester Größe, bei dem die Zeiger im Kreis laufen und älteste Daten überschrieben werden."
     },
 
@@ -382,7 +382,7 @@ const algorithmenQuestions = [
             { text: "Zwei Kanten kreuzen sich", correct: false },
             { text: "Ein Knoten hat keine Nachbarn", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Zwei Knoten sind adjazent (benachbart), wenn sie durch eine Kante direkt miteinander verbunden sind."
     },
 
@@ -394,7 +394,7 @@ const algorithmenQuestions = [
             { text: "Wenn der Graph vollständig ist", correct: false },
             { text: "Immer", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Eine Eulertour existiert genau dann, wenn der Graph (abgesehen von isolierten Knoten) zusammenhängend ist und alle Knoten geraden Grad haben."
     },
 
@@ -406,7 +406,7 @@ const algorithmenQuestions = [
             { text: "Ein vollständiger Graph", correct: false },
             { text: "Ein Graph mit geraden Knotengraden", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Ein Graph ist zusammenhängend, wenn es zwischen je zwei Knoten einen Weg gibt."
     },
 
@@ -418,7 +418,7 @@ const algorithmenQuestions = [
             { text: "Data Access Graph", correct: false },
             { text: "Double Adjacency Graph", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "DAG steht für Directed Acyclic Graph - ein gerichteter Graph ohne Kreise."
     },
 
@@ -430,11 +430,11 @@ const algorithmenQuestions = [
             { text: "Ein vollständiger Graph", correct: false },
             { text: "Ein Graph mit maximaler Kantenzahl", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Ein Spannbaum (spanning tree) ist ein Teilgraph, der alle Knoten enthält und ein Baum ist (zusammenhängend und kreisfrei)."
     },
 
-// ==================== OFFENE FRAGEN (AKTUALISIERT) ====================
+// ==================== OFFENE FRAGEN ====================
 
     {
         question: "Erklären Sie den Unterschied zwischen Best Case, Average Case und Worst Case bei der Laufzeitanalyse.",
@@ -446,7 +446,7 @@ const algorithmenQuestions = [
         <li><b>Worst Case:</b> Die ungünstigste Eingabe, bei der der Algorithmus am längsten braucht. Dieser Fall ist meist am wichtigsten für die Analyse.</li>
     </ul>
     `,
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Der Worst Case ist meist am relevantesten, da er eine obere Schranke garantiert - der Algorithmus wird nie länger brauchen."
     },
 
@@ -461,7 +461,7 @@ const algorithmenQuestions = [
         <li><b>Laufzeit:</b> O(n+m)</li>
     </ul>
     `,
-        topic: "Algorithmen",
+        topic: "Breitensuche",
         feedback: "Denke an Wellen, die sich vom Start ausbreiten: zuerst die nächste Ebene, dann die nächste usw."
     },
 
@@ -475,7 +475,7 @@ const algorithmenQuestions = [
         <li><b>Beispiel:</b> [5a, 2, 5b, 1] → Beim Einfügen von 5b wird es hinter 5a einsortiert; die Reihenfolge der 5er bleibt 5a vor 5b.</li>
     </ul>
     `,
-        topic: "Algorithmen",
+        topic: "Insertion Sort",
         feedback: "Beim Einfügen vergleicht man strikt mit '<', nicht mit '≤'. Dadurch bleibt die relative Reihenfolge gleicher Schlüssel erhalten."
     },
 
@@ -491,7 +491,7 @@ const algorithmenQuestions = [
         <li><b>Antwort:</b> <b>O(n³)</b> - kubische Laufzeit</li>
     </ul>
     `,
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Drei verschachtelte Schleifen, die jeweils n-mal laufen, ergeben O(n³)."
     },
 
@@ -508,7 +508,7 @@ const algorithmenQuestions = [
         <li><b>Tourenplanung:</b> Euler-Tour für Müllabfuhr oder Postboten</li>
     </ul>
     `,
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Graphenalgorithmen haben vielfältige praktische Anwendungen in Navigation, Netzwerkplanung, Logistik und mehr."
     },
 
@@ -523,7 +523,7 @@ const algorithmenQuestions = [
             { text: "Insertion Sort", correct: false },
             { text: "Bubble Sort", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Merge Sort, Quick Sort (Average) und Heap Sort haben alle O(n·log n) Laufzeit. Insertion Sort und Bubble Sort haben im Average/Worst Case O(n²)."
     },
 
@@ -535,7 +535,7 @@ const algorithmenQuestions = [
             { text: "Beide verwenden Stacks", correct: false },
             { text: "Beide verwenden Queues", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "DFS geht erst in die Tiefe (Stack/Rekursion), BFS geht erst in die Breite (Queue)."
     },
 
@@ -547,7 +547,7 @@ const algorithmenQuestions = [
             { text: "Kreisfrei", correct: false },
             { text: "Vollständig", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "PRIM MST",
         feedback: "Prim und Kruskal arbeiten auf ungerichteten, zusammenhängenden, gewichteten Graphen, um einen MST zu finden."
     },
 
@@ -559,7 +559,7 @@ const algorithmenQuestions = [
             { text: "Der Algorithmus ist stabil", correct: false },
             { text: "Der Algorithmus ist schnell", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Datenstrukturen",
         feedback: "In-situ bedeutet, dass die Sortierung direkt im ursprünglichen Array erfolgt ohne zusätzlichen Speicher (außer konstantem Hilfsspeicher)."
     },
 
@@ -571,7 +571,7 @@ const algorithmenQuestions = [
             { text: "O(n)", correct: false },
             { text: "O(n·log n)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "Binäre Suche halbiert den Suchraum in jedem Schritt, daher O(log n) Laufzeit."
     },
 
@@ -583,7 +583,7 @@ const algorithmenQuestions = [
             { text: "Die Anzahl der Wege zu anderen Knoten", correct: false },
             { text: "Die Tiefe des Knotens", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Der Knotengrad ist die Anzahl der Kanten, die an diesem Knoten anliegen (inzident sind)."
     },
 
@@ -595,7 +595,7 @@ const algorithmenQuestions = [
             { text: "Die Mengen sind sortiert", correct: false },
             { text: "Die Mengen sind leer", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Datenstrukturen",
         feedback: "Zwei Mengen sind disjunkt, wenn ihre Schnittmenge leer ist - sie haben kein gemeinsames Element."
     },
 
@@ -607,7 +607,7 @@ const algorithmenQuestions = [
             { text: "Sie verwenden Backtracking", correct: false },
             { text: "Sie sind immer langsamer als andere Algorithmen", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Graphentheorie",
         feedback: "Greedy-Algorithmen treffen in jedem Schritt die lokal beste Wahl. Sie liefern nur bei Problemen mit optimaler Substruktur garantiert die optimale Lösung."
     },
 
@@ -619,7 +619,7 @@ const algorithmenQuestions = [
             { text: "Einfluss = Ausfluss", correct: false },
             { text: "Alle Kanten müssen benutzt werden", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Netzwerkflüsse",
         feedback: "Die Kapazitätsbedingung besagt: 0 ≤ f(u,v) ≤ u(u,v) - der Fluss darf die Kapazität nicht überschreiten."
     },
 
@@ -631,7 +631,7 @@ const algorithmenQuestions = [
             { text: "O(2ⁿ)", correct: true },
             { text: "O(n³)", correct: false }
         ],
-        topic: "Algorithmen",
+        topic: "Laufzeiten - O Notation",
         feedback: "O(2ⁿ) ist exponentiell und wächst viel schneller als polynomielle Laufzeiten wie O(n²) oder O(n³)."
     }
 
