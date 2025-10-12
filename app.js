@@ -212,7 +212,10 @@ function switchMode(mode) {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+    const navBtn = document.querySelector(`.nav-btn[data-mode="${mode}"]`);
+    if (navBtn) {
+        navBtn.classList.add('active');
+    }
 
     switch(mode) {
         case 'main':

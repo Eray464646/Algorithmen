@@ -635,10 +635,9 @@ const algorithmenQuestions=  [
         feedback: "O(2ⁿ) ist exponentiell und wächst viel schneller als polynomielle Laufzeiten wie O(n²) oder O(n³)."
     }
 
+
 ];
 
 
 // Export für die Verwendung in anderen Dateien
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = algorithmenQuestions;
-}
+export default algorithmenQuestions;
