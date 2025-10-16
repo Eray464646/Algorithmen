@@ -643,23 +643,11 @@ export class GamifiedQuiz {
      * Update topic filter to include Klausurfragen
      */
     updateTopicFilter() {
-        const topicFilter = document.getElementById('topicFilter');
-        if (!topicFilter) return;
-
-        // Check if Klausurfragen button already exists
-        if (document.querySelector('[data-topic="Klausurfragen"]')) return;
-
-        // Add Klausurfragen button
-        const btn = document.createElement('button');
-        btn.className = 'topic-btn';
-        btn.dataset.topic = 'Klausurfragen';
-        btn.textContent = 'Klausurfragen';
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-        });
-        
-        topicFilter.appendChild(btn);
+        // Show the Klausurfragen topic button in the main topic filter
+        const btn = document.getElementById('klausurfragenTopicBtn');
+        if (btn) {
+            btn.style.display = 'inline-block';
+        }
     }
 
     /**

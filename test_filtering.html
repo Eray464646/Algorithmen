@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Klausurfragen Filtering</title>
+</head>
+<body>
+    <h1>Test Klausurfragen Category Filtering</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        import questionSource from './src/data/questionSource.js';
+        import algorithmenQuestions from './algorithmen.js';
+        import mcFragen from './mc_fragen_suche_und_baeume.js';
+        
+        // Initialize
+        questionSource.initialize(algorithmenQuestions, mcFragen);
+        
+        // Simulate loading Klausurfragen
+        const mockKlausurfragen = [
+            {
+                id: 'klausur_1',
+                topic: 'Klausurfragen',
+                type: 'mc',
+                question: 'Test Klausurfrage?',
+                choices: ['A', 'B', 'C', 'D'],
+                correctIndex: 0,
+                solution: 'Test',
+                source: 'klausur'
+            }
+        ];
+        questionSource.klausurQuestions = mockKlausurfragen;
+        
+        // Test filtering
+        const results = document.getElementById('results');
+        
+        // Test 1: Get all topics
+        const allTopics = questionSource.getAllTopics();
+        results.innerHTML += `<h2>All Topics:</h2><pre>${JSON.stringify(allTopics, null, 2)}</pre>`;
+        
+        // Test 2: Get only Klausurfragen
+        const klausurOnly = questionSource.getQuestionsByTopics(['Klausurfragen']);
+        results.innerHTML += `<h2>Klausurfragen only (${klausurOnly.length}):</h2>`;
+        results.innerHTML += `<ul>${klausurOnly.map(q => `<li>${q.topic}: ${q.question.substring(0, 50)}...</li>`).join('')}</ul>`;
+        
+        // Test 3: Get Insertion Sort
+        const insertionSort = questionSource.getQuestionsByTopics(['Insertion Sort']);
+        results.innerHTML += `<h2>Insertion Sort only (${insertionSort.length}):</h2>`;
+        results.innerHTML += `<ul>${insertionSort.map(q => `<li>${q.topic}: ${q.question.substring(0, 50)}...</li>`).join('')}</ul>`;
+        
+        // Test 4: Get all questions
+        const allQuestions = questionSource.getQuestionsByTopics(['all']);
+        results.innerHTML += `<h2>All questions (${allQuestions.length}):</h2>`;
+        const topicCount = allQuestions.reduce((acc, q) => {
+            acc[q.topic] = (acc[q.topic] || 0) + 1;
+            return acc;
+        }, {});
+        results.innerHTML += `<pre>${JSON.stringify(topicCount, null, 2)}</pre>`;
+    </script>
+</body>
+</html>
