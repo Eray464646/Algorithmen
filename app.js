@@ -1,6 +1,8 @@
 // ===== IMPORTS =====
 import algorithmenQuestions from './algorithmen.js';
 import mcFragen from './mc_fragen_suche_und_baeume.js';
+import questionSource from './src/data/questionSource.js';
+import { GamifiedQuiz } from './src/modes/gamified/GamifiedQuiz.js';
 
 // ===== GLOBALE VARIABLEN =====
 let allQuestions = [];
@@ -12,6 +14,7 @@ let userAnswers = [];
 let questionProgress = {};
 let currentProfile = null;
 let profiles = {};
+let gamifiedQuiz = null;
 
 // ===== INITIALISIERUNG =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,6 +27,24 @@ function initializeApp() {
     checkCurrentProfile();
     setupEventListeners();
     applyTheme();
+    
+    // Initialize questionSource
+    questionSource.initialize(algorithmenQuestions, mcFragen);
+    
+    // Initialize gamified quiz
+    gamifiedQuiz = new GamifiedQuiz(questionSource);
+    
+    // Check if Klausurfragen are cached
+    if (questionSource.hasKlausurfragenCache()) {
+        showKlausurfragenTopic();
+    }
+}
+
+function showKlausurfragenTopic() {
+    const btn = document.getElementById('klausurfragenTopicBtn');
+    if (btn) {
+        btn.style.display = 'inline-block';
+    }
 }
 
 // ===== PROFIL-VERWALTUNG =====
@@ -378,6 +399,12 @@ function switchMode(mode) {
         case 'learn':
             showScreen('startScreen');
             currentMode = mode;
+            break;
+        case 'gamified':
+            showScreen('gamifiedStartScreen');
+            if (gamifiedQuiz) {
+                gamifiedQuiz.init();
+            }
             break;
         case 'stats':
             showScreen('statsScreen');
