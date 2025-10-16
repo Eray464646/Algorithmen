@@ -155,8 +155,8 @@ class QuestionSource {
     getQuestionsByTopics(topics) {
         let allQuestions = [...this.baseQuestions];
         
-        // Add Klausurfragen if requested
-        if (topics.includes('Klausurfragen')) {
+        // Add Klausurfragen if requested or if 'all' is selected
+        if (topics.includes('Klausurfragen') || topics.includes('all')) {
             allQuestions = [...allQuestions, ...this.klausurQuestions];
         }
 
