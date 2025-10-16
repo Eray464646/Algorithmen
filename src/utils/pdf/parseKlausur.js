@@ -176,6 +176,10 @@ function parseQuestionBlock(match, index) {
 function parseAnswerChoices(text) {
     const choices = [];
     
+    // Remove correct answer marker lines before parsing
+    // Patterns: "→ Richtige Antwort: X", "Richtige Antwort: X", "Korrekte Antwort: X", etc.
+    const cleanedText = text.replace(/[→\-]*\s*(?:Richtige?|Korrekte?)\s+Antwort\s*:\s*[A-D]/gi, '');
+    
     // Pattern for answer options: A), B), C), D) or a), b), c), d) or A., B., etc.
     const patterns = [
         /([A-D])\)\s*([^\n]+?)(?=[A-D]\)|$)/gi,
@@ -186,13 +190,17 @@ function parseAnswerChoices(text) {
     ];
     
     for (const pattern of patterns) {
-        const matches = [...text.matchAll(pattern)];
+        const matches = [...cleanedText.matchAll(pattern)];
         if (matches.length >= 2) {
             matches.forEach(match => {
-                choices.push({
-                    label: match[1],
-                    text: match[2].trim()
-                });
+                const answerText = match[2].trim();
+                // Skip if this is the correct answer marker itself
+                if (!answerText.match(/^[→\-]*\s*(?:Richtige?|Korrekte?)\s+Antwort/i)) {
+                    choices.push({
+                        label: match[1],
+                        text: answerText
+                    });
+                }
             });
             break;
         }
@@ -203,11 +211,12 @@ function parseAnswerChoices(text) {
 
 /**
  * Find the correct answer index
- * Looks for markers like *, ✓, "Richtig:", "Lösung:", or highlight indicators
+ * Looks for markers like *, ✓, "Richtig:", "Lösung:", "→ Richtige Antwort:", or highlight indicators
  */
 function findCorrectAnswer(text, choices) {
     // Check for explicit markers
     const correctMarkers = [
+        /[→\-]*\s*(?:Richtige?|Korrekte?)\s+Antwort\s*:\s*([A-D])/i,  // → Richtige Antwort: B or Richtige Antwort: B
         /\*\s*([A-D])\)/i,  // * A)
         /✓\s*([A-D])\)/i,   // ✓ A)
         /richtig:\s*([A-D])/i,
