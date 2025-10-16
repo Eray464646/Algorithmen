@@ -19,7 +19,7 @@ class QuestionSource {
     constructor() {
         this.baseQuestions = [];
         this.klausurQuestions = [];
-        this.pdfCache = null;
+        this.pdfFiles = []; // Array of {filename, questions, timestamp, hash}
     }
 
     /**
@@ -104,16 +104,31 @@ class QuestionSource {
     async loadKlausurfragenPDF(pdfFile) {
         try {
             const questions = await loadKlausurfragenFromPDF(pdfFile);
-            this.klausurQuestions = questions;
-            
-            // Cache in localStorage
             const hash = await this._hashFile(pdfFile);
-            const cacheData = {
+            
+            // Check if file already exists
+            const existingIndex = this.pdfFiles.findIndex(pdf => pdf.hash === hash);
+            
+            const pdfData = {
+                filename: pdfFile.name,
                 hash,
                 questions,
                 timestamp: new Date().toISOString()
             };
-            localStorage.setItem('klausurfragen_cache', JSON.stringify(cacheData));
+            
+            if (existingIndex >= 0) {
+                // Update existing file
+                this.pdfFiles[existingIndex] = pdfData;
+            } else {
+                // Add new file
+                this.pdfFiles.push(pdfData);
+            }
+            
+            // Update klausurQuestions with all questions from all PDFs
+            this._updateKlausurQuestions();
+            
+            // Save to localStorage
+            this._savePDFCache();
             
             return questions.length;
         } catch (error) {
@@ -132,11 +147,69 @@ class QuestionSource {
         
         try {
             const data = JSON.parse(cache);
-            this.klausurQuestions = data.questions || [];
+            // Support old format (single cache) and new format (array of PDFs)
+            if (Array.isArray(data)) {
+                this.pdfFiles = data;
+            } else if (data.questions) {
+                // Old format - convert to new format
+                this.pdfFiles = [{
+                    filename: 'Klausurfragen.pdf',
+                    hash: data.hash,
+                    questions: data.questions,
+                    timestamp: data.timestamp
+                }];
+            }
+            this._updateKlausurQuestions();
             return this.klausurQuestions.length > 0;
         } catch {
             return false;
         }
+    }
+
+    /**
+     * Update klausurQuestions from all PDF files
+     */
+    _updateKlausurQuestions() {
+        this.klausurQuestions = [];
+        this.pdfFiles.forEach(pdf => {
+            this.klausurQuestions.push(...pdf.questions);
+        });
+    }
+
+    /**
+     * Save PDF cache to localStorage
+     */
+    _savePDFCache() {
+        localStorage.setItem('klausurfragen_cache', JSON.stringify(this.pdfFiles));
+    }
+
+    /**
+     * Get list of uploaded PDF files
+     * @returns {Array} Array of {filename, questionCount, timestamp}
+     */
+    getUploadedPDFs() {
+        return this.pdfFiles.map(pdf => ({
+            filename: pdf.filename,
+            hash: pdf.hash,
+            questionCount: pdf.questions.length,
+            timestamp: pdf.timestamp
+        }));
+    }
+
+    /**
+     * Delete a specific PDF file
+     * @param {string} hash - Hash of the file to delete
+     * @returns {boolean} Success status
+     */
+    deletePDF(hash) {
+        const index = this.pdfFiles.findIndex(pdf => pdf.hash === hash);
+        if (index >= 0) {
+            this.pdfFiles.splice(index, 1);
+            this._updateKlausurQuestions();
+            this._savePDFCache();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -145,6 +218,7 @@ class QuestionSource {
     clearKlausurfragenCache() {
         localStorage.removeItem('klausurfragen_cache');
         this.klausurQuestions = [];
+        this.pdfFiles = [];
     }
 
     /**

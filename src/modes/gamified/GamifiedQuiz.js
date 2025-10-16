@@ -25,6 +25,9 @@ export class GamifiedQuiz {
      */
     init() {
         this.renderStartScreen();
+        
+        // Expose deletePDF method globally for inline handlers
+        window.deletePDF = (hash) => this.deletePDF(hash);
     }
 
     /**
@@ -107,17 +110,19 @@ export class GamifiedQuiz {
 
                 <div class="pdf-upload-section">
                     <h3>📄 Klausurfragen hochladen</h3>
-                    <p>Lade die Klausurfragen.pdf hoch, um zusätzliche Fragen zu aktivieren</p>
+                    <p>Lade Klausurfragen-PDFs hoch, um zusätzliche Fragen zu aktivieren</p>
                     <input type="file" id="pdfUpload" accept=".pdf" style="display: none;">
                     <button class="btn btn-outline" id="uploadPdfBtn">
                         📤 PDF hochladen
                     </button>
                     <div id="pdfStatus"></div>
+                    <div id="uploadedPdfsList"></div>
                 </div>
             </div>
         `;
 
         this.attachStartScreenListeners();
+        this.renderUploadedPDFsList();
     }
 
     /**
@@ -151,6 +156,40 @@ export class GamifiedQuiz {
     }
 
     /**
+     * Render list of uploaded PDFs
+     */
+    renderUploadedPDFsList() {
+        const container = document.getElementById('uploadedPdfsList');
+        if (!container) return;
+
+        const uploadedPDFs = this.questionSource.getUploadedPDFs();
+        
+        if (uploadedPDFs.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="uploaded-pdfs">
+                <h4>Hochgeladene PDFs:</h4>
+                <div class="pdf-list">
+                    ${uploadedPDFs.map(pdf => `
+                        <div class="pdf-item">
+                            <div class="pdf-info">
+                                <span class="pdf-filename">📄 ${pdf.filename}</span>
+                                <span class="pdf-question-count">${pdf.questionCount} Fragen</span>
+                            </div>
+                            <button class="btn btn-small btn-danger" data-hash="${pdf.hash}" onclick="window.deletePDF('${pdf.hash}')">
+                                🗑️ Löschen
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
      * Handle PDF upload
      */
     async handlePdfUpload(event) {
@@ -164,10 +203,37 @@ export class GamifiedQuiz {
             const count = await this.questionSource.loadKlausurfragenPDF(file);
             statusEl.innerHTML = `<span style="color: var(--success);">✅ ${count} Fragen geladen!</span>`;
             
+            // Refresh the uploaded PDFs list
+            this.renderUploadedPDFsList();
+            
             // Refresh topics in filter
             this.updateTopicFilter();
+            
+            // Clear the file input so the same file can be uploaded again if needed
+            event.target.value = '';
         } catch (error) {
             statusEl.innerHTML = `<span style="color: var(--error);">❌ Fehler: ${error.message}</span>`;
+        }
+    }
+
+    /**
+     * Delete a PDF file
+     */
+    deletePDF(hash) {
+        if (confirm('Möchtest du diese PDF wirklich löschen? Die Fragen werden aus dem Quiz entfernt.')) {
+            const success = this.questionSource.deletePDF(hash);
+            if (success) {
+                this.renderUploadedPDFsList();
+                this.updateTopicFilter();
+                
+                const statusEl = document.getElementById('pdfStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = `<span style="color: var(--success);">✅ PDF gelöscht!</span>`;
+                    setTimeout(() => {
+                        statusEl.innerHTML = '';
+                    }, 3000);
+                }
+            }
         }
     }
 
