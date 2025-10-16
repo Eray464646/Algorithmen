@@ -308,6 +308,31 @@ export class HighscoreManager {
         return highscores.global || null;
     }
 
+    /**
+     * Get all highscores sorted by score
+     * @returns {Array} Array of highscore entries sorted by score (descending)
+     */
+    getAllHighscoresSorted() {
+        const highscores = this.getHighscores();
+        const entries = [];
+        
+        for (const [key, data] of Object.entries(highscores)) {
+            entries.push({
+                key,
+                ...data
+            });
+        }
+        
+        return entries.sort((a, b) => b.score - a.score);
+    }
+
+    /**
+     * Clear all highscores
+     */
+    clearAllHighscores() {
+        localStorage.removeItem(this.storageKey);
+    }
+
     _getTopicKey(topics) {
         if (typeof topics === 'string') return topics;
         return Array.isArray(topics) ? topics.sort().join('_') : 'all';

@@ -467,10 +467,182 @@
     padding: 1rem 2rem;
 }
 
+/* Start Actions */
+.start-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+/* Scoreboard */
+.scoreboard-card {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+}
+
+.scoreboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.scoreboard-header h2 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.empty-scoreboard {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-scoreboard p {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+}
+
+.scoreboard-table {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+}
+
+.scoreboard-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.scoreboard-table thead {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.scoreboard-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.scoreboard-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.scoreboard-row:hover {
+    background: var(--bg-secondary);
+}
+
+.scoreboard-row.top-rank {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.scoreboard-row.top-rank:hover {
+    background: rgba(255, 215, 0, 0.15);
+}
+
+.scoreboard-table .rank {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    width: 60px;
+}
+
+.scoreboard-table .score {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.scoreboard-table .topics {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    max-width: 300px;
+}
+
+.scoreboard-table .date {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.scoreboard-table .date small {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.scoreboard-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .gamified-start-card {
         padding: 1rem;
+    }
+
+    .start-actions {
+        flex-direction: column;
+    }
+
+    .start-actions .btn {
+        width: 100%;
+    }
+
+    .scoreboard-card {
+        padding: 1rem;
+    }
+
+    .scoreboard-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .scoreboard-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .scoreboard-table th,
+    .scoreboard-table td {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .scoreboard-table .rank {
+        font-size: 1.2rem;
+        width: 40px;
+    }
+
+    .scoreboard-table .topics {
+        max-width: 150px;
+        font-size: 0.8rem;
+    }
+
+    .scoreboard-table .date {
+        font-size: 0.75rem;
     }
 
     .gamified-game-header {

@@ -96,9 +96,14 @@ export class GamifiedQuiz {
                     </ul>
                 </div>
 
-                <button class="btn btn-primary btn-large" id="startGamifiedBtn">
-                    🎮 Spiel starten
-                </button>
+                <div class="start-actions">
+                    <button class="btn btn-primary btn-large" id="startGamifiedBtn">
+                        🎮 Spiel starten
+                    </button>
+                    <button class="btn btn-outline btn-large" id="viewScoreboardBtn">
+                        🏆 Scoreboard anzeigen
+                    </button>
+                </div>
 
                 <div class="pdf-upload-section">
                     <h3>📄 Klausurfragen hochladen</h3>
@@ -122,6 +127,11 @@ export class GamifiedQuiz {
         const startBtn = document.getElementById('startGamifiedBtn');
         if (startBtn) {
             startBtn.addEventListener('click', () => this.startGame());
+        }
+
+        const scoreboardBtn = document.getElementById('viewScoreboardBtn');
+        if (scoreboardBtn) {
+            scoreboardBtn.addEventListener('click', () => this.showScoreboard());
         }
 
         const uploadBtn = document.getElementById('uploadPdfBtn');
@@ -660,5 +670,123 @@ export class GamifiedQuiz {
             [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
         return newArray;
+    }
+
+    /**
+     * Show scoreboard
+     */
+    showScoreboard() {
+        const container = document.getElementById('gamifiedStartScreen');
+        if (!container) return;
+
+        const scores = this.highscoreManager.getAllHighscoresSorted();
+
+        container.innerHTML = `
+            <div class="scoreboard-card">
+                <div class="scoreboard-header">
+                    <h2>🏆 Scoreboard</h2>
+                    <button class="btn btn-outline" id="backFromScoreboardBtn">
+                        ← Zurück
+                    </button>
+                </div>
+
+                ${scores.length === 0 ? `
+                    <div class="empty-scoreboard">
+                        <div class="empty-icon">📊</div>
+                        <p>Noch keine Highscores vorhanden!</p>
+                        <p>Spiele das Gamified Quiz, um deinen ersten Score zu erzielen.</p>
+                    </div>
+                ` : `
+                    <div class="scoreboard-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Punkte</th>
+                                    <th>Streak</th>
+                                    <th>Genauigkeit</th>
+                                    <th>Themen</th>
+                                    <th>Datum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${scores.map((entry, index) => this.renderScoreboardRow(entry, index)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="scoreboard-actions">
+                        <button class="btn btn-danger" id="clearScoreboardBtn">
+                            🗑️ Scoreboard löschen
+                        </button>
+                    </div>
+                `}
+            </div>
+        `;
+
+        // Attach listeners
+        const backBtn = document.getElementById('backFromScoreboardBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => this.renderStartScreen());
+        }
+
+        const clearBtn = document.getElementById('clearScoreboardBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearScoreboard());
+        }
+    }
+
+    /**
+     * Render a scoreboard row
+     */
+    renderScoreboardRow(entry, index) {
+        const date = new Date(entry.date);
+        const formattedDate = date.toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        const formattedTime = date.toLocaleTimeString('de-DE', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // Format topics
+        let topicDisplay = '';
+        if (entry.key === 'global') {
+            topicDisplay = '🌍 Global';
+        } else if (Array.isArray(entry.topics)) {
+            topicDisplay = entry.topics.join(', ');
+        } else {
+            topicDisplay = entry.key.replace(/_/g, ', ');
+        }
+
+        // Add medal for top 3
+        const rank = index + 1;
+        let rankDisplay = rank;
+        if (rank === 1) rankDisplay = '🥇';
+        else if (rank === 2) rankDisplay = '🥈';
+        else if (rank === 3) rankDisplay = '🥉';
+
+        return `
+            <tr class="scoreboard-row ${rank <= 3 ? 'top-rank' : ''}">
+                <td class="rank">${rankDisplay}</td>
+                <td class="score"><strong>${entry.score}</strong></td>
+                <td>${entry.stats.streak || 0}</td>
+                <td>${entry.stats.accuracy || 0}%</td>
+                <td class="topics">${topicDisplay}</td>
+                <td class="date">${formattedDate}<br><small>${formattedTime}</small></td>
+            </tr>
+        `;
+    }
+
+    /**
+     * Clear scoreboard
+     */
+    clearScoreboard() {
+        if (confirm('Möchtest du wirklich alle Highscores löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+            this.highscoreManager.clearAllHighscores();
+            this.showScoreboard(); // Refresh the view
+        }
     }
 }
