@@ -452,7 +452,12 @@ function startQuiz(mode) {
         return;
     }
 
+    // Shuffle the questions order
     currentQuestions = shuffleArray(filteredQuestions);
+    
+    // Shuffle answer options for each question
+    currentQuestions = currentQuestions.map(q => shuffleAnswerOptions(q));
+    
     showScreen('quizScreen');
     displayQuestion();
 }
@@ -822,6 +827,35 @@ function shuffleArray(array) {
         [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
     return newArray;
+}
+
+// Shuffle answer options and update correct indices accordingly
+function shuffleAnswerOptions(question) {
+    // Don't shuffle if there are no options or if it's a generated question
+    if (!question.options || question.options.length === 0) {
+        return question;
+    }
+    
+    // Create a copy of the question to avoid modifying the original
+    const shuffledQuestion = { ...question };
+    
+    // Create an array of indices with their corresponding options
+    const indexedOptions = question.options.map((option, index) => ({
+        option: option,
+        originalIndex: index,
+        isCorrect: question.correctIndices.includes(index)
+    }));
+    
+    // Shuffle the indexed options
+    const shuffledIndexedOptions = shuffleArray(indexedOptions);
+    
+    // Extract the new options and correct indices
+    shuffledQuestion.options = shuffledIndexedOptions.map(item => item.option);
+    shuffledQuestion.correctIndices = shuffledIndexedOptions
+        .map((item, newIndex) => item.isCorrect ? newIndex : null)
+        .filter(idx => idx !== null);
+    
+    return shuffledQuestion;
 }
 
 // ===== EXPORT FÜR DEBUGGING =====

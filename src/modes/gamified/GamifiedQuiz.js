@@ -273,6 +273,9 @@ export class GamifiedQuiz {
         // Limit questions to configured count
         this.currentQuestions = this.currentQuestions.slice(0, settings.questionCount);
 
+        // Shuffle answer options for each question
+        this.currentQuestions = this.currentQuestions.map(q => this.shuffleAnswerOptions(q));
+
         // Initialize game state
         this.gameState = new GameState({
             timerDuration: settings.timerDuration,
@@ -736,6 +739,36 @@ export class GamifiedQuiz {
             [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
         return newArray;
+    }
+
+    /**
+     * Shuffle answer options and update correct index accordingly
+     */
+    shuffleAnswerOptions(question) {
+        // Don't shuffle if there are no choices or if it's an open question
+        if (!question.choices || question.choices.length === 0 || question.type === 'open') {
+            return question;
+        }
+        
+        // Create a copy of the question to avoid modifying the original
+        const shuffledQuestion = { ...question };
+        
+        // Create an array of indices with their corresponding choices
+        const indexedChoices = question.choices.map((choice, index) => ({
+            choice: choice,
+            originalIndex: index,
+            isCorrect: index === question.correctIndex
+        }));
+        
+        // Shuffle the indexed choices
+        const shuffledIndexedChoices = this.shuffleArray(indexedChoices);
+        
+        // Extract the new choices and correct index
+        shuffledQuestion.choices = shuffledIndexedChoices.map(item => item.choice);
+        const correctItem = shuffledIndexedChoices.find(item => item.isCorrect);
+        shuffledQuestion.correctIndex = shuffledIndexedChoices.indexOf(correctItem);
+        
+        return shuffledQuestion;
     }
 
     /**
