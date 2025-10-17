@@ -127,7 +127,9 @@ Breakdown:
 
 ## Testing Recommendations
 
-To verify the fix works:
+See **TESTING_CHECKLIST.md** for comprehensive testing instructions.
+
+Quick verification steps:
 
 1. **Ensure Supabase Realtime is Enabled**
    - Go to Supabase → Database → Replication
