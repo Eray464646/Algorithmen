@@ -241,7 +241,7 @@ export class MultiplayerQuiz {
             const { data: room, error: fetchError } = await supabase
                 .from('rooms')
                 .select('*')
-                .eq('code', roomId)
+                .eq('code', roomId.toUpperCase())
                 .single();
 
             if (fetchError || !room) {
@@ -277,7 +277,7 @@ export class MultiplayerQuiz {
             const { error: updateError } = await supabase
                 .from('rooms')
                 .update({ players: updatedPlayers })
-                .eq('id', roomId);
+                .eq('id', room.id);
 
             if (updateError) {
                 console.error('Error joining room:', updateError);
@@ -290,7 +290,7 @@ export class MultiplayerQuiz {
             this.questions = room.settings.questions;
 
             // Subscribe to room updates
-            await this.subscribeToRoom(roomId);
+            await this.subscribeToRoom(room.id);
 
             // Show waiting room
             this.renderWaitingRoom();
