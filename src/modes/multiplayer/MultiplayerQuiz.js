@@ -10,7 +10,7 @@ export class MultiplayerQuiz {
         this.questionSource = questionSource;
         this.currentRoom = null;
         this.currentPlayer = null;
-        this.roomSubscription = null;
+        this.roomChannel = null;
         this.isHost = false;
         this.currentQuestionIndex = 0;
         this.questions = [];
@@ -165,7 +165,7 @@ export class MultiplayerQuiz {
                 score: 0,
                 lives: 3,
                 answers: [],
-                isReady: false
+                ready: false
             };
 
             // Create room in Supabase
@@ -281,16 +281,18 @@ export class MultiplayerQuiz {
                 score: 0,
                 lives: 3,
                 answers: [],
-                isReady: false
+                ready: false
             };
 
             // Add player to room
             const updatedPlayers = [...room.players, this.currentPlayer];
             
-            const { error: updateError } = await supabase
+            const { data: updatedRoom, error: updateError } = await supabase
                 .from('rooms')
                 .update({ players: updatedPlayers })
-                .eq('id', room.id);
+                .eq('id', room.id)
+                .select()
+                .single();
 
             if (updateError) {
                 console.error('Error joining room:', updateError);
@@ -298,7 +300,7 @@ export class MultiplayerQuiz {
                 return;
             }
 
-            this.currentRoom = { ...room, players: updatedPlayers };
+            this.currentRoom = updatedRoom;
             this.isHost = false;
             this.questions = room.settings.questions;
 
@@ -319,9 +321,9 @@ export class MultiplayerQuiz {
      */
     async subscribeToRoom(roomId) {
         // Unsubscribe from previous subscription if exists
-        if (this.roomSubscription) {
+        if (this.roomChannel) {
             console.log('Removing previous subscription...');
-            await supabase.removeChannel(this.roomSubscription);
+            await supabase.removeChannel(this.roomChannel);
         }
 
         console.log(`Setting up subscription for room: ${roomId}`);
@@ -333,14 +335,14 @@ export class MultiplayerQuiz {
                 resolve(); // Don't reject, just continue
             }, 10000);
 
-            this.roomSubscription = supabase
-                .channel(`room:${roomId}`)
+            this.roomChannel = supabase
+                .channel('room_' + roomId)
                 .on('postgres_changes', 
                     { 
                         event: 'UPDATE', 
                         schema: 'public', 
                         table: 'rooms',
-                        filter: `id=eq.${roomId}`
+                        filter: 'id=eq.' + roomId
                     }, 
                     (payload) => {
                         console.log('Room update received:', payload);
@@ -444,11 +446,11 @@ export class MultiplayerQuiz {
                     <h3>Spieler (${players.length}/${maxPlayers}):</h3>
                     <div class="player-list">
                         ${players.map((p, i) => `
-                            <div class="player-item ${p.id === this.currentPlayer.id ? 'current-player' : ''} ${p.isReady ? 'player-ready' : 'player-not-ready'}">
+                            <div class="player-item ${p.id === this.currentPlayer.id ? 'current-player' : ''} ${p.ready ? 'player-ready' : 'player-not-ready'}">
                                 <span class="player-icon">${i === 0 ? '👑' : '👤'}</span>
                                 <span class="player-name">${p.name}${i === 0 ? ' (Host)' : ''}</span>
                                 ${i === 0 ? '<span class="status-badge host-badge">Host</span>' : 
-                                  p.isReady ? '<span class="ready-badge">✓ Bereit</span>' : 
+                                  p.ready ? '<span class="ready-badge">✓ Bereit</span>' : 
                                   '<span class="not-ready-badge">⏳ Warten...</span>'}
                             </div>
                         `).join('')}
@@ -459,8 +461,8 @@ export class MultiplayerQuiz {
                     ${this.isHost ? `
                         ${(() => {
                             const nonHostPlayers = players.slice(1);
-                            const readyCount = nonHostPlayers.filter(p => p.isReady).length;
-                            const canStart = players.length >= 2 && nonHostPlayers.every(p => p.isReady);
+                            const readyCount = nonHostPlayers.filter(p => p.ready).length;
+                            const canStart = players.length >= 2 && nonHostPlayers.every(p => p.ready);
                             return `
                                 <div class="ready-status-info">
                                     <span class="ready-count ${canStart ? 'all-ready' : ''}">
@@ -477,10 +479,10 @@ export class MultiplayerQuiz {
                             `;
                         })()}
                     ` : `
-                        <button class="btn btn-secondary ${this.currentPlayer.isReady ? 'btn-ready' : ''}" id="readyBtn">
-                            ${this.currentPlayer.isReady ? '✅ Bereit' : '⏳ Bereit werden'}
+                        <button class="btn btn-secondary ${this.currentPlayer.ready ? 'btn-ready' : ''}" id="readyBtn">
+                            ${this.currentPlayer.ready ? '✅ Bereit' : '⏳ Bereit werden'}
                         </button>
-                        <p class="info-text">${this.currentPlayer.isReady ? '✓ Du bist bereit! Warte auf den Host...' : 'Klicke "Bereit", wenn du spielen möchtest'}</p>
+                        <p class="info-text">${this.currentPlayer.ready ? '✓ Du bist bereit! Warte auf den Host...' : 'Klicke "Bereit", wenn du spielen möchtest'}</p>
                     `}
                     <button class="btn btn-outline" id="leaveRoomBtn">
                         🚪 Raum verlassen
@@ -552,7 +554,7 @@ export class MultiplayerQuiz {
         try {
             const updatedPlayers = this.currentRoom.players.map(p => 
                 p.id === this.currentPlayer.id 
-                    ? { ...p, isReady: !p.isReady }
+                    ? { ...p, ready: !p.ready }
                     : p
             );
 
@@ -596,9 +598,9 @@ export class MultiplayerQuiz {
             }
 
             // Unsubscribe and return to lobby
-            if (this.roomSubscription) {
-                await supabase.removeChannel(this.roomSubscription);
-                this.roomSubscription = null;
+            if (this.roomChannel) {
+                await supabase.removeChannel(this.roomChannel);
+                this.roomChannel = null;
             }
 
             this.currentRoom = null;
@@ -1063,7 +1065,7 @@ export class MultiplayerQuiz {
                 score: 0,
                 lives: 3,
                 answers: [],
-                isReady: false
+                ready: false
             }));
 
             const { error } = await supabase
@@ -1147,8 +1149,8 @@ export class MultiplayerQuiz {
             clearInterval(this.timerInterval);
         }
 
-        if (this.roomSubscription) {
-            await supabase.removeChannel(this.roomSubscription);
+        if (this.roomChannel) {
+            await supabase.removeChannel(this.roomChannel);
         }
     }
 }
