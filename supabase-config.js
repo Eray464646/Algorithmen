@@ -3,8 +3,8 @@
 
 // Supabase project URL and anon key
 // Note: Replace with your actual Supabase credentials
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // e.g., https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://ydvrarshdvjdlyrdvoau.supabase.co'; // e.g., https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkdnJhcnNoZHZqZGx5cmR2b2F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzU5MDYsImV4cCI6MjA3NjIxMTkwNn0.Ii-Nmd8gzrNAJMB_evnDNwawGwkq3vOcpLAV58GFd5M';
 
 // Supabase client - will be initialized dynamically
 export let supabase = null;
