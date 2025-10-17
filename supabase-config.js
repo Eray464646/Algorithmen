@@ -23,7 +23,6 @@ export async function initSupabase() {
 
 // Helper function to check if Supabase is configured
 export function isSupabaseConfigured() {
-    return SUPABASE_URL !== 'https://ydvrarshdvjdlyrdvoau.supabase.co' && 
-           SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkdnJhcnNoZHZqZGx5cmR2b2F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzU5MDYsImV4cCI6MjA3NjIxMTkwNn0.Ii-Nmd8gzrNAJMB_evnDNwawGwkq3vOcpLAV58GFd5M' &&
-           SUPABASE_URL && SUPABASE_ANON_KEY;
+  return Boolean(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
 }
+
