@@ -444,10 +444,12 @@ export class MultiplayerQuiz {
                     <h3>Spieler (${players.length}/${maxPlayers}):</h3>
                     <div class="player-list">
                         ${players.map((p, i) => `
-                            <div class="player-item ${p.id === this.currentPlayer.id ? 'current-player' : ''}">
+                            <div class="player-item ${p.id === this.currentPlayer.id ? 'current-player' : ''} ${p.isReady ? 'player-ready' : 'player-not-ready'}">
                                 <span class="player-icon">${i === 0 ? '👑' : '👤'}</span>
-                                <span class="player-name">${p.name}</span>
-                                ${p.isReady ? '<span class="ready-badge">✓ Bereit</span>' : ''}
+                                <span class="player-name">${p.name}${i === 0 ? ' (Host)' : ''}</span>
+                                ${i === 0 ? '<span class="status-badge host-badge">Host</span>' : 
+                                  p.isReady ? '<span class="ready-badge">✓ Bereit</span>' : 
+                                  '<span class="not-ready-badge">⏳ Warten...</span>'}
                             </div>
                         `).join('')}
                     </div>
@@ -455,17 +457,30 @@ export class MultiplayerQuiz {
 
                 <div class="waiting-actions">
                     ${this.isHost ? `
-                        <button class="btn btn-primary btn-large" id="startGameBtn"
-                                ${players.length < 2 || !players.slice(1).every(p => p.isReady) ? 'disabled' : ''}>
-                            🎮 Spiel starten
-                        </button>
-                        ${players.length < 2 ? '<p class="info-text">Mindestens 2 Spieler benötigt</p>' : 
-                          !players.slice(1).every(p => p.isReady) ? '<p class="info-text">Alle Spieler müssen bereit sein</p>' : ''}
+                        ${(() => {
+                            const nonHostPlayers = players.slice(1);
+                            const readyCount = nonHostPlayers.filter(p => p.isReady).length;
+                            const canStart = players.length >= 2 && nonHostPlayers.every(p => p.isReady);
+                            return `
+                                <div class="ready-status-info">
+                                    <span class="ready-count ${canStart ? 'all-ready' : ''}">
+                                        ${readyCount} / ${nonHostPlayers.length} Spieler bereit
+                                    </span>
+                                </div>
+                                <button class="btn btn-primary btn-large ${canStart ? 'btn-pulse' : ''}" id="startGameBtn"
+                                        ${!canStart ? 'disabled' : ''}>
+                                    🎮 Spiel starten
+                                </button>
+                                ${players.length < 2 ? '<p class="info-text">⚠️ Mindestens 2 Spieler benötigt</p>' : 
+                                  !canStart ? '<p class="info-text">⏳ Warte auf alle Spieler...</p>' : 
+                                  '<p class="info-text success-text">✅ Alle Spieler sind bereit!</p>'}
+                            `;
+                        })()}
                     ` : `
-                        <button class="btn btn-secondary" id="readyBtn">
-                            ${this.currentPlayer.isReady ? '✓ Bereit' : 'Bereit'}
+                        <button class="btn btn-secondary ${this.currentPlayer.isReady ? 'btn-ready' : ''}" id="readyBtn">
+                            ${this.currentPlayer.isReady ? '✅ Bereit' : '⏳ Bereit werden'}
                         </button>
-                        <p class="info-text">Warte auf den Host...</p>
+                        <p class="info-text">${this.currentPlayer.isReady ? '✓ Du bist bereit! Warte auf den Host...' : 'Klicke "Bereit", wenn du spielen möchtest'}</p>
                     `}
                     <button class="btn btn-outline" id="leaveRoomBtn">
                         🚪 Raum verlassen
