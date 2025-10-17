@@ -241,7 +241,7 @@ export class MultiplayerQuiz {
             const { data: room, error: fetchError } = await supabase
                 .from('rooms')
                 .select('*')
-                .eq('code', roomId)
+                .eq('code', roomId.toUpperCase())
                 .single();
 
             if (fetchError || !room) {
