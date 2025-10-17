@@ -2,6 +2,10 @@
 
 Der neue Multiplayer-Modus ermöglicht es, dass 2-3 Spieler gleichzeitig in Echtzeit gegeneinander antreten können. Die Synchronisation erfolgt über Supabase.
 
+> **🚨 Probleme mit der Spieler-Synchronisation?**
+> - [Schnellhilfe (2 Min.)](SCHNELLHILFE_MULTIPLAYER.md) - Wenn Host keine Spieler sieht
+> - [Detaillierte Setup-Anleitung](SUPABASE_SETUP_GUIDE.md) - Vollständige Supabase-Konfiguration
+
 ## 🎮 Features
 
 - **Echtzeit-Multiplayer**: 2-3 Spieler treten gleichzeitig an
