@@ -310,24 +310,29 @@ export class MultiplayerQuiz {
             await supabase.removeChannel(this.roomSubscription);
         }
 
-        // Subscribe to room changes
-        this.roomSubscription = supabase
-            .channel(`room:${roomId}`)
-            .on('postgres_changes', 
-                { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'rooms',
-                    filter: `id=eq.${roomId}`
-                }, 
-                (payload) => {
-                    console.log('Room update received:', payload);
-                    this.handleRoomUpdate(payload.new);
-                }
-            )
-            .subscribe((status) => {
-                console.log('Subscription status:', status);
-            });
+        // Create and subscribe to room changes
+        return new Promise((resolve) => {
+            this.roomSubscription = supabase
+                .channel(`room:${roomId}`)
+                .on('postgres_changes', 
+                    { 
+                        event: 'UPDATE', 
+                        schema: 'public', 
+                        table: 'rooms',
+                        filter: `id=eq.${roomId}`
+                    }, 
+                    (payload) => {
+                        console.log('Room update received:', payload);
+                        this.handleRoomUpdate(payload.new);
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('Subscription status:', status);
+                    if (status === 'SUBSCRIBED') {
+                        resolve();
+                    }
+                });
+        });
     }
 
     /**
@@ -408,7 +413,7 @@ export class MultiplayerQuiz {
                           !players.slice(1).every(p => p.isReady) ? '<p class="info-text">Alle Spieler müssen bereit sein</p>' : ''}
                     ` : `
                         <button class="btn btn-secondary" id="readyBtn">
-                            ${this.currentPlayer.isReady ? '✓ Bereit' : '✓ Bereit'}
+                            ${this.currentPlayer.isReady ? '✓ Bereit' : 'Bereit'}
                         </button>
                         <p class="info-text">Warte auf den Host...</p>
                     `}
