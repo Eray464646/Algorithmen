@@ -3,7 +3,7 @@
  * Implements real-time multiplayer gameplay using Supabase
  */
 
-import { supabase, isSupabaseConfigured } from '../../../supabase-config.js';
+import { supabase, isSupabaseConfigured, initSupabase } from '../../../supabase-config.js';
 
 export class MultiplayerQuiz {
     constructor(questionSource) {
@@ -15,18 +15,19 @@ export class MultiplayerQuiz {
         this.currentQuestionIndex = 0;
         this.questions = [];
         this.hasAnswered = false;
-        
-        // Check if Supabase is configured
-        if (!isSupabaseConfigured()) {
-            console.warn('Supabase is not configured. Multiplayer mode will not work.');
-        }
+        this.supabaseLoaded = false;
     }
 
     /**
      * Initialize multiplayer mode
      */
     async init() {
-        if (!isSupabaseConfigured()) {
+        // Try to load Supabase dynamically
+        if (!this.supabaseLoaded && isSupabaseConfigured()) {
+            this.supabaseLoaded = await initSupabase();
+        }
+        
+        if (!isSupabaseConfigured() || !this.supabaseLoaded) {
             this.renderConfigurationError();
             return;
         }
