@@ -111,6 +111,15 @@ export class GamifiedQuiz {
                 <div class="pdf-upload-section">
                     <h3>📄 Klausurfragen hochladen</h3>
                     <p>Lade Klausurfragen-PDFs hoch, um zusätzliche Fragen zu aktivieren</p>
+                    <div class="pdf-drop-zone" id="pdfDropZone">
+                        <div class="drop-zone-content">
+                            <div class="drop-zone-icon">📄</div>
+                            <div class="drop-zone-text">
+                                <strong>PDF hier ablegen</strong>
+                                <span>oder klicken zum Auswählen</span>
+                            </div>
+                        </div>
+                    </div>
                     <input type="file" id="pdfUpload" accept=".pdf" style="display: none;">
                     <button class="btn btn-outline" id="uploadPdfBtn">
                         📤 PDF hochladen
@@ -144,6 +153,49 @@ export class GamifiedQuiz {
         if (uploadBtn && pdfInput) {
             uploadBtn.addEventListener('click', () => pdfInput.click());
             pdfInput.addEventListener('change', (e) => this.handlePdfUpload(e));
+        }
+
+        // Setup drag & drop for PDF upload
+        const dropZone = document.getElementById('pdfDropZone');
+        if (dropZone && pdfInput) {
+            // Click to select file
+            dropZone.addEventListener('click', () => pdfInput.click());
+
+            // Drag & drop events
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drag-over');
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    // Only handle the first PDF file
+                    const pdfFile = Array.from(files).find(file => file.type === 'application/pdf');
+                    if (pdfFile) {
+                        this.handlePdfFile(pdfFile);
+                    } else {
+                        const statusEl = document.getElementById('pdfStatus');
+                        if (statusEl) {
+                            statusEl.innerHTML = `<span style="color: var(--error);">❌ Bitte nur PDF-Dateien hochladen!</span>`;
+                            setTimeout(() => {
+                                statusEl.innerHTML = '';
+                            }, 3000);
+                        }
+                    }
+                }
+            });
         }
 
         // Save settings on change
@@ -196,6 +248,13 @@ export class GamifiedQuiz {
         const file = event.target.files[0];
         if (!file) return;
 
+        await this.handlePdfFile(file);
+    }
+
+    /**
+     * Handle PDF file (from upload or drag & drop)
+     */
+    async handlePdfFile(file) {
         const statusEl = document.getElementById('pdfStatus');
         statusEl.textContent = 'Lade PDF...';
 
@@ -209,8 +268,10 @@ export class GamifiedQuiz {
             // Refresh topics in filter
             this.updateTopicFilter();
             
-            // Clear the file input so the same file can be uploaded again if needed
-            event.target.value = '';
+            // Clear the status after some time
+            setTimeout(() => {
+                statusEl.innerHTML = '';
+            }, 5000);
         } catch (error) {
             statusEl.innerHTML = `<span style="color: var(--error);">❌ Fehler: ${error.message}</span>`;
         }
