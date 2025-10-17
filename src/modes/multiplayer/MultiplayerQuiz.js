@@ -318,6 +318,8 @@ export class MultiplayerQuiz {
 
     /**
      * Subscribe to room updates via Supabase Realtime
+     * This is called for both HOST and CLIENT to receive real-time updates
+     * when players join, toggle ready status, or game state changes
      */
     async subscribeToRoom(roomId) {
         // Unsubscribe from previous subscription if exists
@@ -558,13 +560,23 @@ export class MultiplayerQuiz {
                     : p
             );
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('rooms')
                 .update({ players: updatedPlayers })
-                .eq('id', this.currentRoom.id);
+                .eq('id', this.currentRoom.id)
+                .select()
+                .single();
 
             if (error) {
                 console.error('Error toggling ready:', error);
+                return;
+            }
+
+            // Update local state immediately
+            if (data) {
+                this.currentRoom = data;
+                this.currentPlayer = data.players.find(p => p.id === this.currentPlayer.id);
+                this.updateWaitingRoom();
             }
         } catch (error) {
             console.error('Error toggling ready:', error);
