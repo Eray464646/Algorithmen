@@ -3,6 +3,7 @@ import algorithmenQuestions from './algorithmen.js';
 import mcFragen from './mc_fragen_suche_und_baeume.js';
 import questionSource from './src/data/questionSource.js';
 import { GamifiedQuiz } from './src/modes/gamified/GamifiedQuiz.js';
+import { MultiplayerQuiz } from './src/modes/multiplayer/MultiplayerQuiz.js';
 
 // ===== GLOBALE VARIABLEN =====
 let allQuestions = [];
@@ -15,6 +16,7 @@ let questionProgress = {};
 let currentProfile = null;
 let profiles = {};
 let gamifiedQuiz = null;
+let multiplayerQuiz = null;
 
 // ===== INITIALISIERUNG =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,6 +35,9 @@ function initializeApp() {
     
     // Initialize gamified quiz
     gamifiedQuiz = new GamifiedQuiz(questionSource);
+    
+    // Initialize multiplayer quiz
+    multiplayerQuiz = new MultiplayerQuiz(questionSource);
     
     // Check if Klausurfragen are cached
     if (questionSource.hasKlausurfragenCache()) {
@@ -404,6 +409,12 @@ function switchMode(mode) {
             showScreen('gamifiedStartScreen');
             if (gamifiedQuiz) {
                 gamifiedQuiz.init();
+            }
+            break;
+        case 'multiplayer':
+            showScreen('multiplayerStartScreen');
+            if (multiplayerQuiz) {
+                multiplayerQuiz.init();
             }
             break;
         case 'stats':
