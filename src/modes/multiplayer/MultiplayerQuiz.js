@@ -201,6 +201,12 @@ export class MultiplayerQuiz {
             this.currentRoom = data;
             this.isHost = true;
 
+            // 8-stelligen Code aus der UUID generieren, in DB speichern und dem currentRoom zuweisen
+            const roomCode = data.id.substring(0, 8).toUpperCase();
+            await supabase.from('rooms').update({ code: roomCode }).eq('id', data.id);
+            this.currentRoom.code = roomCode;
+
+
             // Subscribe to room updates
             await this.subscribeToRoom(data.id);
 
@@ -235,7 +241,7 @@ export class MultiplayerQuiz {
             const { data: room, error: fetchError } = await supabase
                 .from('rooms')
                 .select('*')
-                .eq('id', roomId)
+                .eq('code', roomId)
                 .single();
 
             if (fetchError || !room) {
@@ -354,7 +360,7 @@ export class MultiplayerQuiz {
         const container = document.getElementById('multiplayerStartScreen');
         if (!container) return;
 
-        const roomCode = this.currentRoom.id.substring(0, 8).toUpperCase();
+        const roomCode = this.currentRoom.code || this.currentRoom.id.substring(0, 8).toUpperCase();
         const players = this.currentRoom.players || [];
         const maxPlayers = this.currentRoom.settings.maxPlayers || 3;
 
