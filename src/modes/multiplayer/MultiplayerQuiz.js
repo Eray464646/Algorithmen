@@ -246,7 +246,8 @@ export class MultiplayerQuiz {
     /**
      * Join an existing room
      */
-    async joinRoom(roomId) {
+    async joinRoom(roomCode) {
+        this.log('Join room by code:', roomCode);
         const playerName = document.getElementById('playerNameInput')?.value.trim() || 'Spieler';
         
         try {
@@ -254,65 +255,96 @@ export class MultiplayerQuiz {
             const { data: room, error: fetchError } = await supabase
                 .from('rooms')
                 .select('*')
-                .eq('code', roomId.toUpperCase())
+                .eq('code', roomCode.toUpperCase())
                 .single();
 
             if (fetchError || !room) {
-                alert('Raum nicht gefunden! Bitte überprüfe den Code.');
+                this.alert('Raum nicht gefunden! Bitte überprüfe den Code.');
                 return;
             }
 
             // Check if room is full
             if (room.players.length >= room.settings.maxPlayers) {
-                alert('Dieser Raum ist voll!');
+                this.alert('Dieser Raum ist voll!');
                 return;
             }
 
             // Check if game already started
             if (room.current_question_index > 0) {
-                alert('Das Spiel hat bereits begonnen!');
+                this.alert('Das Spiel hat bereits begonnen!');
                 return;
             }
 
-            // Create player object
-            this.currentPlayer = {
-                id: this.generatePlayerId(),
+            // Get or create player ID
+            const myId = this.getPlayerId();
+            
+            // Create player object if not already created
+            if (!this.currentPlayer) {
+                this.currentPlayer = {
+                    id: myId,
+                    name: playerName,
+                    score: 0,
+                    lives: 3,
+                    answers: [],
+                    ready: false
+                };
+            }
+
+            // Use upsert helper to add player if not already in room
+            const nextPlayers = this.upsertPlayer(room.players ?? [], myId, {
                 name: playerName,
                 score: 0,
                 lives: 3,
-                answers: [],
-                ready: false
-            };
+                answers: []
+            });
 
-            // Add player to room
-            const updatedPlayers = [...room.players, this.currentPlayer];
-            
-            const { data: updatedRoom, error: updateError } = await supabase
-                .from('rooms')
-                .update({ players: updatedPlayers })
-                .eq('id', room.id)
-                .select()
-                .single();
-
-            if (updateError) {
-                console.error('Error joining room:', updateError);
-                alert('Fehler beim Beitreten: ' + updateError.message);
-                return;
+            let current = room;
+            // Only update if player was added (not already in room)
+            if (nextPlayers !== room.players && nextPlayers.length !== room.players.length) {
+                const { data: updated, error: upErr } = await supabase
+                    .from('rooms')
+                    .update({ players: nextPlayers })
+                    .eq('id', room.id)
+                    .select()
+                    .single();
+                
+                if (upErr) {
+                    this.alert('Beitreten fehlgeschlagen. Versuche es erneut.');
+                    return;
+                }
+                current = updated;
             }
 
-            this.currentRoom = updatedRoom;
-            this.isHost = false;
-            this.questions = room.settings.questions;
+            this.currentRoom = current;
+            this.isHost = (current.host_uid === myId);
+            this.questions = current.settings.questions;
+            
+            // Update currentPlayer reference from DB
+            const playerInRoom = current.players.find(p => p.id === myId);
+            if (playerInRoom) {
+                this.currentPlayer = playerInRoom;
+            }
 
             // Subscribe to room updates
-            await this.subscribeToRoom(room.id);
+            this.subscribeToRoom(current.id);
 
             // Show waiting room
             this.renderWaitingRoom();
 
         } catch (error) {
             console.error('Error joining room:', error);
-            alert('Fehler beim Beitreten: ' + error.message);
+            this.alert('Fehler beim Beitreten: ' + error.message);
+        }
+    }
+
+    /**
+     * Unsubscribe from room updates
+     */
+    unsubscribeFromRoom() {
+        if (this.roomChannel) {
+            supabase.removeChannel(this.roomChannel);
+            this.roomChannel = null;
+            this.log('Unsubscribed from room');
         }
     }
 
@@ -321,57 +353,48 @@ export class MultiplayerQuiz {
      * This is called for both HOST and CLIENT to receive real-time updates
      * when players join, toggle ready status, or game state changes
      */
-    async subscribeToRoom(roomId) {
-        // Unsubscribe from previous subscription if exists
-        if (this.roomChannel) {
-            console.log('Removing previous subscription...');
-            await supabase.removeChannel(this.roomChannel);
+    subscribeToRoom(roomId) {
+        this.unsubscribeFromRoom();
+
+        this.log('Setting up subscription for room:', roomId);
+
+        this.roomChannel = supabase
+            .channel(`rooms:${roomId}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'rooms',
+                filter: `id=eq.${roomId}`
+            }, (payload) => {
+                this.log('Room update received via Realtime');
+                // Server is source of truth
+                this.currentRoom = payload.new;
+                this.updateWaitingRoomDisplay();
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    this.log('Subscribed to room', roomId);
+                } else if (status === 'CHANNEL_ERROR') {
+                    this.warn('Realtime channel error');
+                } else if (status === 'TIMED_OUT') {
+                    this.warn('Realtime channel timed out');
+                } else if (status === 'CLOSED') {
+                    this.log('Realtime channel closed');
+                }
+            });
+    }
+
+    /**
+     * Update waiting room display (called by Realtime updates)
+     */
+    updateWaitingRoomDisplay() {
+        // Check if we're still in waiting room (question index is 0)
+        if (this.currentRoom && this.currentRoom.current_question_index === 0) {
+            this.updateWaitingRoom();
+        } else if (this.currentRoom && this.currentRoom.current_question_index > 0) {
+            // Game started, transition to game screen
+            this.handleRoomUpdate(this.currentRoom);
         }
-
-        console.log(`Setting up subscription for room: ${roomId}`);
-
-        // Create and subscribe to room changes
-        return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                console.warn('Subscription timeout - connection might be slow');
-                resolve(); // Don't reject, just continue
-            }, 10000);
-
-            this.roomChannel = supabase
-                .channel('room_' + roomId)
-                .on('postgres_changes', 
-                    { 
-                        event: 'UPDATE', 
-                        schema: 'public', 
-                        table: 'rooms',
-                        filter: 'id=eq.' + roomId
-                    }, 
-                    (payload) => {
-                        console.log('Room update received:', payload);
-                        this.handleRoomUpdate(payload.new);
-                    }
-                )
-                .subscribe((status, err) => {
-                    console.log('Subscription status:', status, err ? `Error: ${err}` : '');
-                    if (status === 'SUBSCRIBED') {
-                        clearTimeout(timeout);
-                        console.log('✓ Successfully subscribed to room updates');
-                        resolve();
-                    } else if (status === 'CHANNEL_ERROR') {
-                        clearTimeout(timeout);
-                        console.error('Subscription error:', err);
-                        resolve(); // Continue anyway
-                    } else if (status === 'TIMED_OUT') {
-                        clearTimeout(timeout);
-                        console.error('Subscription timed out');
-                        resolve(); // Continue anyway
-                    } else if (status === 'CLOSED') {
-                        clearTimeout(timeout);
-                        console.warn('Subscription closed');
-                        resolve(); // Continue anyway
-                    }
-                });
-        });
     }
 
     /**
@@ -462,21 +485,21 @@ export class MultiplayerQuiz {
                 <div class="waiting-actions">
                     ${this.isHost ? `
                         ${(() => {
-                            const nonHostPlayers = players.slice(1);
-                            const readyCount = nonHostPlayers.filter(p => p.ready).length;
-                            const canStart = players.length >= 2 && nonHostPlayers.every(p => p.ready);
+                            // Check if all players are ready (all players must be ready, not just non-host)
+                            const allReady = players.length >= 2 && players.every(p => p.ready === true);
+                            const readyCount = players.filter(p => p.ready).length;
                             return `
                                 <div class="ready-status-info">
-                                    <span class="ready-count ${canStart ? 'all-ready' : ''}">
-                                        ${readyCount} / ${nonHostPlayers.length} Spieler bereit
+                                    <span class="ready-count ${allReady ? 'all-ready' : ''}">
+                                        ${readyCount} / ${players.length} Spieler bereit
                                     </span>
                                 </div>
-                                <button class="btn btn-primary btn-large ${canStart ? 'btn-pulse' : ''}" id="startGameBtn"
-                                        ${!canStart ? 'disabled' : ''}>
+                                <button class="btn btn-primary btn-large ${allReady ? 'btn-pulse' : ''}" id="startGameBtn"
+                                        ${!allReady ? 'disabled' : ''}>
                                     🎮 Spiel starten
                                 </button>
                                 ${players.length < 2 ? '<p class="info-text">⚠️ Mindestens 2 Spieler benötigt</p>' : 
-                                  !canStart ? '<p class="info-text">⏳ Warte auf alle Spieler...</p>' : 
+                                  !allReady ? '<p class="info-text">⏳ Warte auf alle Spieler...</p>' : 
                                   '<p class="info-text success-text">✅ Alle Spieler sind bereit!</p>'}
                             `;
                         })()}
@@ -554,32 +577,37 @@ export class MultiplayerQuiz {
      */
     async toggleReady() {
         try {
-            const updatedPlayers = this.currentRoom.players.map(p => 
-                p.id === this.currentPlayer.id 
-                    ? { ...p, ready: !p.ready }
-                    : p
+            const room = this.currentRoom;
+            const me = this.getPlayerId();
+            
+            // Find current ready state and toggle it
+            const currentPlayer = room.players.find(p => p.id === me);
+            const newReadyState = currentPlayer ? !currentPlayer.ready : true;
+            
+            // Update players array with new ready state
+            const players = (room.players ?? []).map(p => 
+                p.id === me ? { ...p, ready: newReadyState } : p
             );
 
             const { data, error } = await supabase
                 .from('rooms')
-                .update({ players: updatedPlayers })
-                .eq('id', this.currentRoom.id)
+                .update({ players })
+                .eq('id', room.id)
                 .select()
                 .single();
 
             if (error) {
-                console.error('Error toggling ready:', error);
+                this.warn('Error toggling ready:', error);
                 return;
             }
 
-            // Update local state immediately
+            // Update local state from DB response
             if (data) {
                 this.currentRoom = data;
-                this.currentPlayer = data.players.find(p => p.id === this.currentPlayer.id);
-                this.updateWaitingRoom();
+                this.currentPlayer = data.players.find(p => p.id === me);
             }
         } catch (error) {
-            console.error('Error toggling ready:', error);
+            this.warn('Error toggling ready:', error);
         }
     }
 
@@ -609,11 +637,8 @@ export class MultiplayerQuiz {
                     .eq('id', this.currentRoom.id);
             }
 
-            // Unsubscribe and return to lobby
-            if (this.roomChannel) {
-                await supabase.removeChannel(this.roomChannel);
-                this.roomChannel = null;
-            }
+            // Unsubscribe from room updates
+            this.unsubscribeFromRoom();
 
             this.currentRoom = null;
             this.currentPlayer = null;
@@ -1118,6 +1143,50 @@ export class MultiplayerQuiz {
     }
 
     /**
+     * Get current player ID (use existing or generate new one)
+     */
+    getPlayerId() {
+        if (this.currentPlayer?.id) {
+            return this.currentPlayer.id;
+        }
+        // Generate new ID if not exists
+        return this.generatePlayerId();
+    }
+
+    /**
+     * Helper function to upsert player in players array
+     * Prevents duplicate entries
+     */
+    upsertPlayer(players, playerId, extra = {}) {
+        const exists = players.some(p => p.id === playerId);
+        if (exists) {
+            return players;
+        }
+        return [...players, { id: playerId, ready: false, ...extra }];
+    }
+
+    /**
+     * Logging helper
+     */
+    log(...args) {
+        console.log('[MultiplayerQuiz]', ...args);
+    }
+
+    /**
+     * Warning helper
+     */
+    warn(...args) {
+        console.warn('[MultiplayerQuiz]', ...args);
+    }
+
+    /**
+     * Alert helper
+     */
+    alert(message) {
+        alert(message);
+    }
+
+    /**
      * Shuffle array
      */
     shuffleArray(array) {
@@ -1162,8 +1231,6 @@ export class MultiplayerQuiz {
             clearInterval(this.timerInterval);
         }
 
-        if (this.roomChannel) {
-            await supabase.removeChannel(this.roomChannel);
-        }
+        this.unsubscribeFromRoom();
     }
 }
