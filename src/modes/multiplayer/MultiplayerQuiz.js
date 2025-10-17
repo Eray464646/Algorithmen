@@ -798,7 +798,8 @@ export class MultiplayerQuiz {
                 console.error('Error submitting answer:', error);
             }
 
-            // Update local player
+            // Update local state immediately
+            this.currentRoom.players = updatedPlayers;
             this.currentPlayer = updatedPlayers.find(p => p.id === this.currentPlayer.id);
 
             // Show selected answer
