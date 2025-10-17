@@ -23,6 +23,13 @@ Eine interaktive Lernplattform für Algorithmen & Datenstrukturen mit drei versc
 - Progressive Schwierigkeit
 - Siehe [GAMIFIED_MODE.md](GAMIFIED_MODE.md) für Details
 
+#### 👥 1v1 Multiplayer (NEU!)
+- Echtzeit-Multiplayer gegen 2-3 Spieler
+- Synchronisierte Fragen mit Timer
+- Punktesystem mit Zeitbonus
+- Siegerpodest mit Top 3
+- Siehe [MULTIPLAYER_MODE.md](MULTIPLAYER_MODE.md) für Details
+
 ### Weitere Features
 
 - **Multi-User Support**: Mehrere Profile mit Passwortschutz
@@ -178,6 +185,16 @@ Algorithmen/
 
 Dieses Projekt ist für Bildungszwecke erstellt.
 
+## 🔧 Setup für Multiplayer-Modus
+
+Der Multiplayer-Modus benötigt eine Supabase-Konfiguration. Siehe [MULTIPLAYER_MODE.md](MULTIPLAYER_MODE.md) für eine detaillierte Anleitung.
+
+**Kurzanleitung:**
+1. Erstelle ein [Supabase](https://supabase.com)-Projekt
+2. Führe das SQL-Setup aus (siehe MULTIPLAYER_MODE.md)
+3. Aktiviere Realtime für die `rooms` Tabelle
+4. Kopiere deine Credentials in `supabase-config.js`
+
 ## 👤 Autor
 
 Eray - [GitHub](https://github.com/Eray464646)
@@ -187,6 +204,13 @@ Eray - [GitHub](https://github.com/Eray464646)
 Contributions, Issues und Feature Requests sind willkommen!
 
 ## 📅 Version
+
+**Version 4.0.0** - 1v1 Multiplayer Mode
+- ✨ Neuer Echtzeit-Multiplayer-Modus (1v1 / 1v1v1)
+- 🌐 Supabase-Integration für synchrones Gameplay
+- 🏆 Siegerpodest mit Top 3 Spielern
+- ⏱️ Timer-System mit Zeitbonus
+- 👥 Raum-System mit Host und Join-Funktion
 
 **Version 3.0.0** - Gamified Quiz Mode
 - ✨ Neuer Gamified Quiz Mode mit Timer und Power-ups
