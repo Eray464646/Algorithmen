@@ -10,7 +10,7 @@ export class MultiplayerQuiz {
         this.questionSource = questionSource;
         this.currentRoom = null;
         this.currentPlayer = null;
-        this.roomSubscription = null;
+        this.roomChannel = null;
         this.isHost = false;
         this.currentQuestionIndex = 0;
         this.questions = [];
@@ -321,9 +321,9 @@ export class MultiplayerQuiz {
      */
     async subscribeToRoom(roomId) {
         // Unsubscribe from previous subscription if exists
-        if (this.roomSubscription) {
+        if (this.roomChannel) {
             console.log('Removing previous subscription...');
-            await supabase.removeChannel(this.roomSubscription);
+            await supabase.removeChannel(this.roomChannel);
         }
 
         console.log(`Setting up subscription for room: ${roomId}`);
@@ -335,14 +335,14 @@ export class MultiplayerQuiz {
                 resolve(); // Don't reject, just continue
             }, 10000);
 
-            this.roomSubscription = supabase
-                .channel(`room:${roomId}`)
+            this.roomChannel = supabase
+                .channel('room_' + roomId)
                 .on('postgres_changes', 
                     { 
                         event: 'UPDATE', 
                         schema: 'public', 
                         table: 'rooms',
-                        filter: `id=eq.${roomId}`
+                        filter: 'id=eq.' + roomId
                     }, 
                     (payload) => {
                         console.log('Room update received:', payload);
@@ -598,9 +598,9 @@ export class MultiplayerQuiz {
             }
 
             // Unsubscribe and return to lobby
-            if (this.roomSubscription) {
-                await supabase.removeChannel(this.roomSubscription);
-                this.roomSubscription = null;
+            if (this.roomChannel) {
+                await supabase.removeChannel(this.roomChannel);
+                this.roomChannel = null;
             }
 
             this.currentRoom = null;
@@ -1149,8 +1149,8 @@ export class MultiplayerQuiz {
             clearInterval(this.timerInterval);
         }
 
-        if (this.roomSubscription) {
-            await supabase.removeChannel(this.roomSubscription);
+        if (this.roomChannel) {
+            await supabase.removeChannel(this.roomChannel);
         }
     }
 }
