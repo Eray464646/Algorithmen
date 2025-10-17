@@ -2,6 +2,10 @@
 
 Der neue Multiplayer-Modus ermöglicht es, dass 2-3 Spieler gleichzeitig in Echtzeit gegeneinander antreten können. Die Synchronisation erfolgt über Supabase.
 
+> **🚨 Probleme mit der Spieler-Synchronisation?**
+> - [Schnellhilfe (2 Min.)](SCHNELLHILFE_MULTIPLAYER.md) - Wenn Host keine Spieler sieht
+> - [Detaillierte Setup-Anleitung](SUPABASE_SETUP_GUIDE.md) - Vollständige Supabase-Konfiguration
+
 ## 🎮 Features
 
 - **Echtzeit-Multiplayer**: 2-3 Spieler treten gleichzeitig an
@@ -31,6 +35,7 @@ CREATE TABLE rooms (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     host_uid UUID NOT NULL,
+    code VARCHAR(8),
     current_question_index INTEGER DEFAULT 0,
     deadline_ts TIMESTAMPTZ,
     players JSONB DEFAULT '[]'::jsonb,
@@ -40,6 +45,7 @@ CREATE TABLE rooms (
 
 -- Index für schnellere Abfragen
 CREATE INDEX idx_rooms_created_at ON rooms(created_at);
+CREATE INDEX idx_rooms_code ON rooms(code);
 
 -- Optional: Alte Räume automatisch löschen (älter als 24 Stunden)
 -- Kannst du als Supabase Function einrichten oder manuell ausführen
@@ -270,14 +276,51 @@ await supabase.from('rooms').delete().eq('id', roomId);
 ### "Fehler beim Erstellen des Raums"
 
 - Überprüfe die Supabase-Credentials
-- Stelle sicher, dass die `rooms` Tabelle existiert
+- Stelle sicher, dass die `rooms` Tabelle existiert mit **allen erforderlichen Spalten** (inkl. `code`)
 - Überprüfe RLS-Policies oder deaktiviere RLS
+- Checke die Browser-Konsole auf spezifische Fehlermeldungen
+
+### "Host sieht keine neuen Spieler / Spieler-Updates funktionieren nicht"
+
+**Mögliche Ursachen:**
+
+1. **Realtime nicht aktiviert**
+   - Gehe in Supabase zu **Database** → **Replication**
+   - Aktiviere Realtime für die `rooms` Tabelle
+   - Stelle sicher, dass **alle Ereignisse** (INSERT, UPDATE, DELETE) aktiviert sind
+   - Nach Änderungen: Warte 1-2 Minuten und lade die App neu
+
+2. **`code` Spalte fehlt**
+   - Führe das aktualisierte SQL-Schema aus (siehe oben - inkl. `code VARCHAR(8)`)
+   - Überprüfe in der Supabase Table Editor, ob die Spalte existiert
+
+3. **RLS-Policies blockieren Updates**
+   - Gehe zu **Authentication** → **Policies**
+   - Stelle sicher, dass UPDATE-Policies für die `rooms` Tabelle existieren
+   - Oder deaktiviere RLS komplett: `ALTER TABLE rooms DISABLE ROW LEVEL SECURITY;`
+
+4. **Browser-Konsole überprüfen**
+   - Öffne die Entwicklerkonsole (F12)
+   - Schaue nach Fehlern beim "Room update received" oder "Subscription status"
+   - Wenn "Subscription status: SUBSCRIBED" nicht erscheint, gibt es ein Realtime-Problem
+
+5. **Netzwerk-Probleme**
+   - Realtime benötigt WebSocket-Verbindungen
+   - Überprüfe, ob dein Netzwerk/Firewall WebSockets erlaubt
+   - Teste auf einem anderen Netzwerk
+
+### "Ready-Status wird nicht angezeigt"
+
+- Der Ready-Status wird als "✓ Bereit" Badge neben dem Spielernamen angezeigt
+- Wenn nicht sichtbar: Überprüfe, ob die Realtime-Updates funktionieren (siehe oben)
+- Der Host sieht den Ready-Status aller Spieler und kann erst starten, wenn alle bereit sind
 
 ### "Realtime funktioniert nicht"
 
 - Stelle sicher, dass Realtime für die `rooms` Tabelle aktiviert ist
 - Überprüfe die Supabase-Konsole auf Fehler
 - Checke die Browser-Konsole auf Fehler
+- Teste mit `console.log` ob "Room update received" erscheint
 
 ### "Timer läuft nicht synchron"
 

@@ -187,13 +187,26 @@ Dieses Projekt ist für Bildungszwecke erstellt.
 
 ## 🔧 Setup für Multiplayer-Modus
 
-Der Multiplayer-Modus benötigt eine Supabase-Konfiguration. Siehe [MULTIPLAYER_MODE.md](MULTIPLAYER_MODE.md) für eine detaillierte Anleitung.
+Der Multiplayer-Modus benötigt eine Supabase-Konfiguration. 
 
-**Kurzanleitung:**
+### Dokumentation
+
+- **[MULTIPLAYER_MODE.md](MULTIPLAYER_MODE.md)** - Vollständige Feature-Dokumentation
+- **[SCHNELLHILFE_MULTIPLAYER.md](SCHNELLHILFE_MULTIPLAYER.md)** - 🚨 Wenn Host keine Spieler sieht (2 Min Fix)
+- **[SUPABASE_SETUP_GUIDE.md](SUPABASE_SETUP_GUIDE.md)** - Detaillierte Konfigurationsanleitung
+
+### Kurzanleitung
+
 1. Erstelle ein [Supabase](https://supabase.com)-Projekt
-2. Führe das SQL-Setup aus (siehe MULTIPLAYER_MODE.md)
-3. Aktiviere Realtime für die `rooms` Tabelle
+2. Führe das SQL-Setup aus (siehe MULTIPLAYER_MODE.md) - **inkl. `code` Spalte!**
+3. **Aktiviere Realtime** für die `rooms` Tabelle (Database → Replication)
 4. Kopiere deine Credentials in `supabase-config.js`
+5. Warte 2 Minuten nach Realtime-Aktivierung
+
+### Häufige Probleme
+
+**Host sieht keine neuen Spieler?**
+→ Realtime ist nicht aktiviert! Siehe [SCHNELLHILFE_MULTIPLAYER.md](SCHNELLHILFE_MULTIPLAYER.md)
 
 ## 👤 Autor
 
