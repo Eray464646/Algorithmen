@@ -203,9 +203,22 @@ export class MultiplayerQuiz {
 
             // 8-stelligen Code aus der UUID generieren, in DB speichern und dem currentRoom zuweisen
             const roomCode = data.id.substring(0, 8).toUpperCase();
-            await supabase.from('rooms').update({ code: roomCode }).eq('id', data.id);
-            this.currentRoom.code = roomCode;
-
+            const { data: updatedRoom, error: codeError } = await supabase
+                .from('rooms')
+                .update({ code: roomCode })
+                .eq('id', data.id)
+                .select()
+                .single();
+            
+            if (codeError) {
+                console.error('Error setting room code:', codeError);
+                // Continue anyway, use room ID as fallback
+                this.currentRoom.code = roomCode;
+            } else if (updatedRoom) {
+                this.currentRoom = updatedRoom;
+            } else {
+                this.currentRoom.code = roomCode;
+            }
 
             // Subscribe to room updates
             await this.subscribeToRoom(data.id);
@@ -307,11 +320,19 @@ export class MultiplayerQuiz {
     async subscribeToRoom(roomId) {
         // Unsubscribe from previous subscription if exists
         if (this.roomSubscription) {
+            console.log('Removing previous subscription...');
             await supabase.removeChannel(this.roomSubscription);
         }
 
+        console.log(`Setting up subscription for room: ${roomId}`);
+
         // Create and subscribe to room changes
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                console.warn('Subscription timeout - connection might be slow');
+                resolve(); // Don't reject, just continue
+            }, 10000);
+
             this.roomSubscription = supabase
                 .channel(`room:${roomId}`)
                 .on('postgres_changes', 
@@ -326,10 +347,24 @@ export class MultiplayerQuiz {
                         this.handleRoomUpdate(payload.new);
                     }
                 )
-                .subscribe((status) => {
-                    console.log('Subscription status:', status);
+                .subscribe((status, err) => {
+                    console.log('Subscription status:', status, err ? `Error: ${err}` : '');
                     if (status === 'SUBSCRIBED') {
+                        clearTimeout(timeout);
+                        console.log('✓ Successfully subscribed to room updates');
                         resolve();
+                    } else if (status === 'CHANNEL_ERROR') {
+                        clearTimeout(timeout);
+                        console.error('Subscription error:', err);
+                        resolve(); // Continue anyway
+                    } else if (status === 'TIMED_OUT') {
+                        clearTimeout(timeout);
+                        console.error('Subscription timed out');
+                        resolve(); // Continue anyway
+                    } else if (status === 'CLOSED') {
+                        clearTimeout(timeout);
+                        console.warn('Subscription closed');
+                        resolve(); // Continue anyway
                     }
                 });
         });
@@ -341,7 +376,16 @@ export class MultiplayerQuiz {
     handleRoomUpdate(roomData) {
         if (!roomData) return;
 
+        console.log('Handling room update:', {
+            playersCount: roomData.players?.length,
+            currentQuestionIndex: roomData.current_question_index,
+            isHost: this.isHost
+        });
+
         const oldRoom = this.currentRoom;
+        const oldPlayersCount = oldRoom?.players?.length || 0;
+        const newPlayersCount = roomData.players?.length || 0;
+        
         this.currentRoom = roomData;
 
         // Update currentPlayer reference from the updated room data
@@ -350,8 +394,14 @@ export class MultiplayerQuiz {
             this.currentPlayer = updatedPlayer;
         }
 
+        // Log player changes
+        if (newPlayersCount !== oldPlayersCount) {
+            console.log(`Player count changed: ${oldPlayersCount} -> ${newPlayersCount}`);
+        }
+
         // Update waiting room if we're still there
         if (roomData.current_question_index === 0) {
+            console.log('Updating waiting room display...');
             this.updateWaitingRoom();
         } else {
             // Game started, show game screen
