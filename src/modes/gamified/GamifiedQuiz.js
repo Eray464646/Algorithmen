@@ -16,6 +16,7 @@ export class GamifiedQuiz {
         this.currentQuestionIndex = 0;
         this.selectedChoiceIndex = null;
         this.isPaused = false;
+        this.answeredQuestions = []; // Store answered questions with results
         
         this.setupEventListeners();
     }
@@ -346,6 +347,7 @@ export class GamifiedQuiz {
 
         this.currentQuestionIndex = 0;
         this.selectedChoiceIndex = null;
+        this.answeredQuestions = []; // Reset answered questions
 
         // Show game screen
         this.showGameScreen();
@@ -519,7 +521,17 @@ export class GamifiedQuiz {
      * Handle answer
      */
     handleAnswer(isCorrect, selectedIndex = null) {
+        const question = this.currentQuestions[this.currentQuestionIndex];
         const result = this.gameState.answerQuestion(isCorrect);
+        
+        // Store the answered question with result
+        this.answeredQuestions.push({
+            question: question,
+            selectedIndex: selectedIndex,
+            isCorrect: isCorrect,
+            timeUsed: this.gameState.currentTimer - this.gameState.timeRemaining,
+            pointsEarned: result.pointsEarned
+        });
         
         // Show feedback
         this.showFeedback(isCorrect, result);
@@ -535,7 +547,6 @@ export class GamifiedQuiz {
 
         // Highlight correct answer if MC
         if (selectedIndex !== null) {
-            const question = this.currentQuestions[this.currentQuestionIndex];
             const choices = document.querySelectorAll('.answer-choice');
             
             choices[selectedIndex].classList.add(isCorrect ? 'correct' : 'wrong');
@@ -712,6 +723,9 @@ export class GamifiedQuiz {
                     <button class="btn btn-primary" id="playAgainBtn">
                         🔄 Nochmal spielen
                     </button>
+                    <button class="btn btn-secondary" id="viewAnswersBtn">
+                        📋 Antworten ansehen
+                    </button>
                     <button class="btn btn-outline" id="backToMenuBtn">
                         🏠 Zurück zum Menü
                     </button>
@@ -727,6 +741,10 @@ export class GamifiedQuiz {
         document.getElementById('playAgainBtn').addEventListener('click', () => {
             container.classList.remove('active');
             this.startGame();
+        });
+
+        document.getElementById('viewAnswersBtn').addEventListener('click', () => {
+            this.showAnswerReview();
         });
 
         document.getElementById('backToMenuBtn').addEventListener('click', () => {
@@ -948,5 +966,107 @@ export class GamifiedQuiz {
             this.highscoreManager.clearAllHighscores();
             this.showScoreboard(); // Refresh the view
         }
+    }
+
+    /**
+     * Show answer review screen
+     */
+    showAnswerReview() {
+        const container = document.getElementById('gamifiedResultScreen');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="answer-review-card">
+                <div class="review-header">
+                    <h2>📋 Antworten-Übersicht</h2>
+                    <button class="btn btn-outline" id="backToResultsBtn">
+                        ← Zurück zu Ergebnissen
+                    </button>
+                </div>
+
+                <div class="review-summary">
+                    <div class="summary-stat correct">
+                        <span class="summary-icon">✅</span>
+                        <span class="summary-count">${this.answeredQuestions.filter(a => a.isCorrect).length}</span>
+                        <span class="summary-label">Richtig</span>
+                    </div>
+                    <div class="summary-stat wrong">
+                        <span class="summary-icon">❌</span>
+                        <span class="summary-count">${this.answeredQuestions.filter(a => !a.isCorrect).length}</span>
+                        <span class="summary-label">Falsch</span>
+                    </div>
+                </div>
+
+                <div class="review-questions">
+                    ${this.answeredQuestions.map((answer, index) => this.renderAnswerReviewItem(answer, index)).join('')}
+                </div>
+            </div>
+        `;
+
+        // Attach back button listener
+        const backBtn = document.getElementById('backToResultsBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                this.showResultScreen(
+                    this.gameState.lives === 0 ? 'Game Over! 💀' : 'Geschafft! 🎉',
+                    this.gameState.lives > 0
+                );
+            });
+        }
+    }
+
+    /**
+     * Render a single answer review item
+     */
+    renderAnswerReviewItem(answer, index) {
+        const question = answer.question;
+        const statusClass = answer.isCorrect ? 'correct' : 'wrong';
+        const statusIcon = answer.isCorrect ? '✅' : '❌';
+        
+        let answerDetails = '';
+        if (question.type === 'mc') {
+            const userAnswer = answer.selectedIndex !== null ? question.choices[answer.selectedIndex] : 'Keine Antwort';
+            const correctAnswer = question.choices[question.correctIndex];
+            
+            answerDetails = `
+                <div class="answer-detail">
+                    <div class="user-answer ${answer.isCorrect ? 'correct' : 'wrong'}">
+                        <strong>Deine Antwort:</strong> ${userAnswer}
+                    </div>
+                    ${!answer.isCorrect ? `
+                        <div class="correct-answer">
+                            <strong>Richtige Antwort:</strong> ${correctAnswer}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else if (question.type === 'open') {
+            answerDetails = `
+                <div class="answer-detail">
+                    <div class="solution-box">
+                        <strong>Lösung:</strong>
+                        <div class="solution-text">${question.solution}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="review-item ${statusClass}">
+                <div class="review-item-header">
+                    <span class="review-number">Frage ${index + 1}</span>
+                    <span class="review-status">${statusIcon}</span>
+                </div>
+                <div class="review-question">
+                    <div class="question-text">${question.question}</div>
+                    <div class="question-topic">${question.topic}</div>
+                </div>
+                ${answerDetails}
+                <div class="review-meta">
+                    <span>⏱️ Zeit: ${answer.timeUsed}s</span>
+                    <span>💎 Punkte: ${answer.pointsEarned}</span>
+                </div>
+            </div>
+        `;
     }
 }
