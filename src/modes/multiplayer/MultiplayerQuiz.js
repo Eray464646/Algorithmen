@@ -315,16 +315,19 @@ export class MultiplayerQuiz {
             .channel(`room:${roomId}`)
             .on('postgres_changes', 
                 { 
-                    event: '*', 
+                    event: 'UPDATE', 
                     schema: 'public', 
                     table: 'rooms',
                     filter: `id=eq.${roomId}`
                 }, 
                 (payload) => {
+                    console.log('Room update received:', payload);
                     this.handleRoomUpdate(payload.new);
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log('Subscription status:', status);
+            });
     }
 
     /**
@@ -336,12 +339,18 @@ export class MultiplayerQuiz {
         const oldRoom = this.currentRoom;
         this.currentRoom = roomData;
 
+        // Update currentPlayer reference from the updated room data
+        const updatedPlayer = roomData.players.find(p => p.id === this.currentPlayer.id);
+        if (updatedPlayer) {
+            this.currentPlayer = updatedPlayer;
+        }
+
         // Update waiting room if we're still there
         if (roomData.current_question_index === 0) {
             this.updateWaitingRoom();
         } else {
             // Game started, show game screen
-            if (oldRoom.current_question_index === 0 && roomData.current_question_index > 0) {
+            if (!oldRoom || (oldRoom.current_question_index === 0 && roomData.current_question_index > 0)) {
                 this.renderGameScreen();
             } else if (roomData.last_reveal && roomData.last_reveal.timestamp !== oldRoom?.last_reveal?.timestamp) {
                 // New reveal, show it
@@ -392,13 +401,14 @@ export class MultiplayerQuiz {
                 <div class="waiting-actions">
                     ${this.isHost ? `
                         <button class="btn btn-primary btn-large" id="startGameBtn"
-                                ${players.length < 2 ? 'disabled' : ''}>
+                                ${players.length < 2 || !players.slice(1).every(p => p.isReady) ? 'disabled' : ''}>
                             🎮 Spiel starten
                         </button>
-                        ${players.length < 2 ? '<p class="info-text">Mindestens 2 Spieler benötigt</p>' : ''}
+                        ${players.length < 2 ? '<p class="info-text">Mindestens 2 Spieler benötigt</p>' : 
+                          !players.slice(1).every(p => p.isReady) ? '<p class="info-text">Alle Spieler müssen bereit sein</p>' : ''}
                     ` : `
                         <button class="btn btn-secondary" id="readyBtn">
-                            ✓ Bereit
+                            ${this.currentPlayer.isReady ? '✓ Bereit' : '✓ Bereit'}
                         </button>
                         <p class="info-text">Warte auf den Host...</p>
                     `}
